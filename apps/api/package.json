@@ -1,0 +1,13 @@
+{
+  "name": "daily-ai-news-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'API routes run with Next.js in web app'",
+    "build": "echo 'Build handled by web app'",
+    "lint": "echo 'Lint handled by web app'"
+  },
+  "dependencies": {
+    "next": "^14.0.0"
+  }
+}

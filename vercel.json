@@ -1,0 +1,17 @@
+{
+  "buildCommand": "pnpm build",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs",
+  "regions": ["sfo1"],
+  "env": {
+    "AI_PROVIDER": "@ai_provider",
+    "AI_MODEL": "@ai_model",
+    "DAILY_ARTICLE_COUNT": "10",
+    "MAX_SUMMARY_TOKENS": "300"
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
+}

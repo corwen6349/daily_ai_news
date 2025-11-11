@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@daily-ai-news/ai": ["packages/ai"],
+      "@daily-ai-news/db": ["packages/db"],
+      "@daily-ai-news/fetchers": ["packages/fetchers"],
+      "@daily-ai-news/processors": ["packages/processors"],
+      "@daily-ai-news/publisher": ["packages/publisher"],
+      "@daily-ai-news/config": ["packages/config"]
+    }
+  },
+  "include": ["apps/**/*", "packages/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
