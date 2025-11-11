@@ -42,3 +42,8 @@ coverage/
 
 # Misc
 .turbo/
+
+# Scripts with credentials
+push.ps1
+push-to-github.sh
+dev.bat
