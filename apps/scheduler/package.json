@@ -1,0 +1,21 @@
+{
+  "name": "@daily-ai-news/scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/daily.ts",
+  "types": "src/daily.ts",
+  "scripts": {
+    "start": "node dist/daily.js",
+    "build": "tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "@daily-ai-news/db": "1.0.0",
+    "@daily-ai-news/fetchers": "1.0.0",
+    "@daily-ai-news/processors": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  }
+}
+

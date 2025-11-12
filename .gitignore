@@ -1,0 +1,124 @@
+# Dependencies# dependencies# Dependencies
+
+node_modules/
+
+package-lock.jsonnode_modules/node_modules/
+
+yarn.lock
+
+pnpm-lock.yamlpnpm-lock.yaml
+
+
+
+# Build output# build outputspackage-lock.json
+
+.next/
+
+out/.next/yarn.lock
+
+dist/
+
+build/dist/
+
+coverage/
+
+build/# Environment variables
+
+# Environment variables
+
+.envcoverage/.env
+
+.env.local
+
+.env.development.env.local
+
+.env.production
+
+.env.test# environment.env.development
+
+.env.*.local
+
+.env.env.production
+
+# IDE
+
+.vscode/.env.local.env.*.local
+
+.idea/
+
+*.swp.env.production
+
+*.swo
+
+*~.env.test# IDE
+
+
+
+# Logs.vscode/
+
+*.log
+
+npm-debug.log*# logs.idea/
+
+yarn-debug.log*
+
+yarn-error.log*npm-debug.log**.swp
+
+pnpm-debug.log*
+
+yarn-debug.log**.swo
+
+# OS
+
+.DS_Storeyarn-error.log**~
+
+Thumbs.db
+
+pnpm-debug.log*.DS_Store
+
+# Testing
+
+.nyc_output/
+
+
+
+# Misc# misc# Build output
+
+.turbo/
+
+.DS_Store.next/
+
+# Scripts with credentials
+
+push.ps1.idea/out/
+
+push-to-github.sh
+
+dev.bat*.logdist/
+
+
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+.turbo/
+
+# Scripts with credentials
+push.ps1
+push-to-github.sh
+dev.bat
+node_modules

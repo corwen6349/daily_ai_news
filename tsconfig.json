@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "moduleResolution": "Node",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@daily-ai-news/ai": [
+        "packages/ai/src"
+      ],
+      "@daily-ai-news/config": [
+        "packages/config/src"
+      ],
+      "@daily-ai-news/db": [
+        "packages/db/src"
+      ],
+      "@daily-ai-news/fetchers": [
+        "packages/fetchers/src"
+      ],
+      "@daily-ai-news/processors": [
+        "packages/processors/src"
+      ],
+      "@daily-ai-news/publisher": [
+        "packages/publisher/src"
+      ]
+    }
+  },
+  "include": [
+    "apps/**/*",
+    "packages/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".next"
+  ]
+}

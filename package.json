@@ -1,0 +1,28 @@
+{
+  "name": "daily-ai-news",
+  "version": "1.0.0",
+  "description": "�Զ��� AI ���žۺ����ձ�����ƽ̨",
+  "private": true,
+  "packageManager": "npm@9.0.0",
+  "scripts": {
+    "dev": "npm run dev --workspace @daily-ai-news/web",
+    "build": "npm run build --workspace @daily-ai-news/web",
+    "lint": "npm run lint --workspace @daily-ai-news/web",
+    "typecheck": "npm run typecheck --workspace @daily-ai-news/web",
+    "scheduler": "npm run start --workspace @daily-ai-news/scheduler"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}

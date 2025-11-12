@@ -1,0 +1,65 @@
+{{{
+
+  "version": 2,
+
+  "buildCommand": "npm run build --workspace @daily-ai-news/web",  "installCommand": "npm install",  "buildCommand": "npm run build",
+
+  "outputDirectory": "apps/web/.next",
+
+  "framework": "nextjs",  "buildCommand": "npm run build",  "installCommand": "npm install",
+
+  "installCommand": "npm install",
+
+  "regions": ["sfo1"],  "outputDirectory": "apps/web/.next",  "outputDirectory": "apps/web/.next",
+
+  "functions": {
+
+    "apps/web/pages/api/**/*.ts": {  "framework": "nextjs",  "framework": "nextjs",
+
+      "memory": 1024,
+
+      "maxDuration": 30  "regions": ["sfo1"],  "regions": ["sfo1"],
+
+    }
+
+  }  "functions": {  "env": {
+
+}
+
+    "apps/web/pages/api/**/*.ts": {    "NODE_ENV": "production",
+
+      "memory": 1024,    "AI_PROVIDER": "gemini",
+
+      "maxDuration": 30    "AI_MODEL": "gemini-1.5-flash",
+
+    }    "DAILY_ARTICLE_COUNT": "10",
+
+  },    "MAX_SUMMARY_TOKENS": "300"
+
+  "crons": [  },
+
+    {  "git": {
+
+      "path": "/api/fetch-news",    "deploymentEnabled": {
+
+      "schedule": "0 9 * * *"      "master": true,
+
+    }      "main": true
+
+  ]    }
+
+}  },
+
+  "functions": {
+    "apps/web/pages/api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/fetch-news",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
