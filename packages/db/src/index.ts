@@ -14,6 +14,18 @@ declare global {
   var __dailyAiNewsStore: MemoryStore | undefined;
 }
 
+// 辅助函数：处�?Supabase 错误，避免循环引�?
+function handleSupabaseError(error: any, context: string): Error {
+  const errorInfo = {
+    message: error.message || 'Unknown error',
+    code: error.code,
+    details: error.details,
+    hint: error.hint
+  };
+  console.error(`Supabase error in ${context}:`, errorInfo);
+  return new Error(`${context}: ${errorInfo.message} (${errorInfo.code || 'unknown'})`);
+}
+
 function getMemoryStore(): MemoryStore {
   if (!globalThis.__dailyAiNewsStore) {
     globalThis.__dailyAiNewsStore = {
@@ -75,7 +87,7 @@ export async function createSource(input: Omit<Source, 'id' | 'created_at'>): Pr
     .single();
 
   if (error) {
-    throw error;
+    throw handleSupabaseError(error, 'createSource');
   }
   return data as Source;
 }
@@ -99,7 +111,7 @@ export async function updateSource(id: string, input: Partial<Omit<Source, 'id' 
     .single();
 
   if (error) {
-    throw error;
+    throw handleSupabaseError(error, 'updateSource');
   }
   return data as Source;
 }
@@ -117,7 +129,7 @@ export async function deleteSource(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) {
-    throw error;
+    throw handleSupabaseError(error, 'deleteSource');
   }
 }
 
@@ -152,11 +164,10 @@ export async function listArticles({
     const { data, error } = await query as any;
     
     if (error) {
-      console.error('Supabase error fetching articles:', error);
-      throw error;
+      throw handleSupabaseError(error, 'listArticles');
     }
     
-    // 将数据库字段映射到代码字段
+    // 将数据库字段映射到代码字�?
     return (data ?? []).map((item: any) => ({
       id: item.id,
       source_id: item.source_id,
@@ -200,7 +211,7 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
     return { inserted, updated };
   }
 
-  // 将代码字段映射到数据库字段
+  // 将代码字段映射到数据库字�?
   const dbArticles = articles.map(article => ({
     id: article.id,
     source_id: article.source_id,
@@ -212,18 +223,26 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
     created_at: article.created_at
   }));
 
-  const { error } = await getSupabase()
-    .from('articles')
-    .upsert(dbArticles, {
-      onConflict: 'link',  // 注意这里改为 link
-      ignoreDuplicates: false
-    });
-    
-  if (error) {
-    console.error('Supabase error storing articles:', error);
-    throw error;
+  try {
+    const { error } = await getSupabase()
+      .from('articles')
+      .upsert(dbArticles, {
+        onConflict: 'link',  // 注意这里改为 link
+        ignoreDuplicates: false
+      });
+      
+    if (error) {
+      throw handleSupabaseError(error, 'storeArticles');
+    }
+    return { inserted: articles.length, updated: 0 };
+  } catch (error) {
+    // 如果是我们抛出的错误，直接传�?
+    if (error instanceof Error) {
+      throw error;
+    }
+    // 否则创建新的错误
+    throw new Error(`Failed to store articles: ${String(error)}`);
   }
-  return { inserted: articles.length, updated: 0 };
 }
 
 export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
@@ -239,8 +258,7 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
       .in('id', ids);
       
     if (error) {
-      console.error('Supabase error getting articles by ids:', error);
-      throw error;
+      throw handleSupabaseError(error, 'getArticlesByIds');
     }
     
     // 将数据库字段映射到代码字段
@@ -272,8 +290,7 @@ export async function listReports(): Promise<Report[]> {
       .order('report_date', { ascending: false });
 
     if (error) {
-      console.error('Supabase error fetching reports:', error);
-      throw error;
+      throw handleSupabaseError(error, 'listReports');
     }
     
     // 将数据库字段映射到代码字段
@@ -322,7 +339,7 @@ export async function saveReport({
       title: `AI Daily News - ${date}`,  // 添加 title 字段
       content: html,  // content 字段
       html_content: html,  // html_content 字段
-      publish_url: publishedUrl,  // 注意下划线
+      publish_url: publishedUrl,  // 注意下划�?
       report_date: date,  // date -> report_date
       article_ids: articleIds
     })
@@ -330,8 +347,7 @@ export async function saveReport({
     .single();
 
   if (error) {
-    console.error('Supabase error saving report:', error);
-    throw error;
+    throw handleSupabaseError(error, 'saveReport');
   }
   
   // 将数据库字段映射回代码字段
