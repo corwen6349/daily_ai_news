@@ -35,8 +35,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 4. 发布到 GitHub Hugo 博客
     console.log(`🚀 正在发布到 Hugo 博客...`);
-    const publishUrl = await publishReport(htmlContent, reportDate);
-    console.log(`✅ 发布完成`);
+    let publishUrl = '';
+    let publishError = '';
+    
+    try {
+      publishUrl = await publishReport(htmlContent, reportDate);
+      if (publishUrl) {
+        console.log(`✅ 发布完成: ${publishUrl}`);
+      } else {
+        console.log(`⚠️  未发布（可能未配置 GitHub）`);
+      }
+    } catch (error) {
+      publishError = error instanceof Error ? error.message : String(error);
+      console.error(`❌ 发布失败:`, publishError);
+      // 不中断流程，继续保存报告
+    }
 
     // 5. 保存报告记录
     const report = await saveReport({
@@ -51,12 +64,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       success: true,
       report,
-      url: publishUrl
+      url: publishUrl,
+      published: !!publishUrl,
+      publishError: publishError || undefined
     });
   } catch (error) {
     console.error('生成日报失败:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
     res.status(500).json({ 
-      error: error instanceof Error ? error.message : String(error) 
+      error: errorMessage,
+      stack: errorStack
     });
   }
 }

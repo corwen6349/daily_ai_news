@@ -49,8 +49,15 @@ description: "${date} 的 AI 行业要闻精选"
 export async function publishReport(htmlContent: string, date: string): Promise<string> {
   const config = getConfig();
 
+  console.log('📋 GitHub 配置检查:');
+  console.log(`  - GITHUB_TOKEN: ${config.githubToken ? '已配置 (长度: ' + config.githubToken.length + ')' : '❌ 未配置'}`);
+  console.log(`  - GITHUB_REPO: ${config.githubRepo || '❌ 未配置'}`);
+
   if (!config.githubToken || !config.githubRepo) {
-    console.warn('未配置 GitHub，跳过发布步骤');
+    console.warn('⚠️  未配置 GitHub Token 或 Repo，跳过发布步骤');
+    console.warn('提示：在 Vercel Dashboard 中设置环境变量：');
+    console.warn('  - GITHUB_TOKEN: 你的 GitHub Personal Access Token');
+    console.warn('  - GITHUB_REPO: corwen6349/daily-ai-news-blog');
     return '';
   }
 
@@ -58,12 +65,16 @@ export async function publishReport(htmlContent: string, date: string): Promise<
   const fileName = `content/posts/${date}.md`;
   const apiUrl = `https://api.github.com/repos/${config.githubRepo}/contents/${fileName}`;
   
+  console.log(`📝 准备发布到: ${apiUrl}`);
+  
   // 转换为 Hugo Markdown 格式
   const markdownContent = convertToHugoMarkdown(htmlContent, date);
+  console.log(`📄 Markdown 内容长度: ${markdownContent.length} 字符`);
 
   try {
     // 检查文件是否已存在
     let sha: string | undefined;
+    console.log(`🔍 检查文件是否已存在...`);
     const checkResponse = await fetch(apiUrl, {
       headers: {
         Authorization: `Bearer ${config.githubToken}`,
@@ -71,13 +82,18 @@ export async function publishReport(htmlContent: string, date: string): Promise<
       }
     });
 
+    console.log(`检查响应状态: ${checkResponse.status}`);
+    
     if (checkResponse.ok) {
       const existingFile = await checkResponse.json();
       sha = existingFile.sha;
-      console.log(`文件已存在，将更新: ${fileName}`);
+      console.log(`✅ 文件已存在，将更新: ${fileName} (SHA: ${sha?.substring(0, 7)}...)`);
+    } else {
+      console.log(`📄 文件不存在，将创建新文件`);
     }
 
     // 创建或更新文件
+    console.log(`🚀 ${sha ? '更新' : '创建'}文件中...`);
     const response = await fetch(apiUrl, {
       method: 'PUT',
       headers: {
@@ -93,8 +109,11 @@ export async function publishReport(htmlContent: string, date: string): Promise<
       })
     });
 
+    console.log(`GitHub API 响应状态: ${response.status}`);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`❌ GitHub API 错误响应:`, errorText);
       throw new Error(`GitHub API 请求失败: ${response.status} ${errorText}`);
     }
 
@@ -103,6 +122,7 @@ export async function publishReport(htmlContent: string, date: string): Promise<
     
     console.log(`✅ 日报已成功发布到 Hugo 博客: ${fileName}`);
     console.log(`📄 GitHub 文件地址: ${publishUrl}`);
+    console.log(`📝 提交 SHA: ${result.commit?.sha || 'N/A'}`);
     
     // 返回发布后的 URL（实际网站地址需要根据你的 Hugo 部署配置）
     const siteUrl = `https://${config.githubRepo.split('/')[0]}.github.io/${config.githubRepo.split('/')[1]}/posts/${date}/`;
@@ -111,6 +131,10 @@ export async function publishReport(htmlContent: string, date: string): Promise<
     return siteUrl;
   } catch (error) {
     console.error('❌ 发布到 GitHub 失败:', error);
+    if (error instanceof Error) {
+      console.error('错误详情:', error.message);
+      console.error('错误堆栈:', error.stack);
+    }
     throw error;
   }
 }
