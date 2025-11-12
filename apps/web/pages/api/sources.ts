@@ -5,9 +5,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     try {
       const sources = await listSources();
-      res.status(200).json(sources);
+      // 确保返回数组
+      const result = Array.isArray(sources) ? sources : [];
+      res.status(200).json(result);
     } catch (error) {
-      res.status(500).json({ error: String(error) });
+      console.error('Error fetching sources:', error);
+      res.status(500).json({ error: String(error), sources: [] });
     }
   } else if (req.method === 'POST') {
     try {

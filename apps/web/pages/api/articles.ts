@@ -6,9 +6,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 100;
       const articles = await listArticles({ limit });
-      res.status(200).json(articles);
+      // 确保返回数组
+      const result = Array.isArray(articles) ? articles : [];
+      res.status(200).json(result);
     } catch (error) {
-      res.status(500).json({ error: String(error) });
+      console.error('Error fetching articles:', error);
+      res.status(500).json({ error: String(error), articles: [] });
     }
   } else {
     res.status(405).json({ error: 'Method not allowed' });

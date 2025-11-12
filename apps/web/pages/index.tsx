@@ -2,7 +2,21 @@
 import useSWR from 'swr';
 import { Source, Article, Report } from '@daily-ai-news/db';
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => {
+  // 确保返回数组，处理错误响应
+  if (data && typeof data === 'object') {
+    if (data.error) {
+      console.error('API error:', data.error);
+      // 如果有备用数据字段，使用它
+      if (Array.isArray(data.sources)) return data.sources;
+      if (Array.isArray(data.articles)) return data.articles;
+      if (Array.isArray(data.reports)) return data.reports;
+      return [];
+    }
+    if (Array.isArray(data)) return data;
+  }
+  return [];
+});
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'sources' | 'articles' | 'reports'>('sources');
