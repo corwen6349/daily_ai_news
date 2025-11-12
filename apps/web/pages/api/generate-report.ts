@@ -33,20 +33,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const htmlContent = await buildHtmlReport({ date: reportDate, articles: enriched });
     console.log(`✅ HTML 日报生成完成`);
 
-    // 4. 发布到 GitHub Pages
-    console.log(`🚀 正在发布到 GitHub Pages...`);
-    await publishReport(htmlContent, reportDate);
+    // 4. 发布到 GitHub Hugo 博客
+    console.log(`🚀 正在发布到 Hugo 博客...`);
+    const publishUrl = await publishReport(htmlContent, reportDate);
     console.log(`✅ 发布完成`);
 
     // 5. 保存报告记录
-    const githubRepo = process.env.GITHUB_REPO || 'your-username/your-repo';
-    const githubUrl = `https://${githubRepo.split('/')[0]}.github.io/${githubRepo.split('/')[1]}/reports/${reportDate}.html`;
-    
     const report = await saveReport({
       date: reportDate,
       html: htmlContent,
       articleIds: articleIds,
-      publishedUrl: githubUrl
+      publishedUrl: publishUrl || `https://github.com/${process.env.GITHUB_REPO}/blob/main/content/posts/${reportDate}.md`
     });
 
     console.log(`\n🎉 日报生成成功！\n`);
@@ -54,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       success: true,
       report,
-      url: githubUrl
+      url: publishUrl
     });
   } catch (error) {
     console.error('生成日报失败:', error);

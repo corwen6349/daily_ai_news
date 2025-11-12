@@ -186,19 +186,24 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-#### 可选变量 (GitHub Pages 发布)
+#### 可选变量 (Hugo 博客自动发布)
 
 ```bash
 GITHUB_TOKEN=ghp_xxxxx
-GITHUB_OWNER=your_github_username
-GITHUB_REPO=daily-news-site
+GITHUB_REPO=corwen6349/daily-ai-news-blog
 ```
 
 **获取 GitHub Token**:
 1. 访问 GitHub Settings > Developer settings > Personal access tokens
 2. 点击 "Generate new token (classic)"
-3. 勾选 `repo` 权限
+3. 勾选 `repo` 权限（完整仓库访问）
 4. 生成并复制 token
+
+**配置 Hugo 博客仓库**:
+1. 你的 Hugo 博客仓库: `https://github.com/corwen6349/daily-ai-news-blog`
+2. 确保仓库有 `content/posts/` 目录
+3. 日报将自动发布为 Markdown 文件到该目录
+4. Hugo 会自动构建并发布到网站
 
 ### 3.4 部署
 
@@ -364,8 +369,7 @@ git push origin master
 | `GEMINI_API_KEY` | ✅* | Google Gemini API 密钥 | `AIzaSy...` |
 | `DEEPSEEK_API_KEY` | ✅* | DeepSeek API 密钥 | `sk-...` |
 | `GITHUB_TOKEN` | ❌ | GitHub 个人访问令牌 | `ghp_...` |
-| `GITHUB_OWNER` | ❌ | GitHub 用户名 | `your_username` |
-| `GITHUB_REPO` | ❌ | GitHub 仓库名 | `daily-news-site` |
+| `GITHUB_REPO` | ❌ | Hugo 博客仓库 (格式: owner/repo) | `corwen6349/daily-ai-news-blog` |
 | `NODE_ENV` | ❌ | 环境模式 | `production` |
 
 \* 至少需要配置一个 AI API Key
