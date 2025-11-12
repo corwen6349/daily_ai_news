@@ -1,5 +1,6 @@
 {
-  "buildCommand": "pnpm build",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
   "regions": ["sfo1"],

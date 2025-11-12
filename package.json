@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "自动化AI新闻聚合与生成平台",
   "private": true,
-  "packageManager": "pnpm@8.0.0",
+  "packageManager": "npm@9.0.0",
   "scripts": {
-    "dev": "turbo run dev --parallel",
-    "build": "turbo run build",
-    "test": "turbo run test",
-    "lint": "turbo run lint",
-    "format": "turbo run format"
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspaces"
   },
   "workspaces": [
     "apps/*",
@@ -17,14 +17,8 @@
   ],
   "dependencies": {},
   "devDependencies": {
-    "turbo": "^2.0.0",
     "typescript": "^5.3.0",
-    "@types/node": "^20.0.0",
-    "next": "^14.0.0",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "@supabase/supabase-js": "^2.0.0",
-    "ts-node": "^10.0.0"
+    "@types/node": "^20.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
