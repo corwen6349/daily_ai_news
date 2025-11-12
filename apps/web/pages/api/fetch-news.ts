@@ -37,7 +37,7 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
     
     // 详细的错误序列化
     let errorMessage = 'Unknown error';
-    let errorDetails: any = {};
+    let errorDetails: Record<string, unknown> = {};
     
     if (error instanceof Error) {
       errorMessage = error.message;
@@ -49,7 +49,7 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
     } else if (typeof error === 'object' && error !== null) {
       try {
         errorMessage = JSON.stringify(error);
-        errorDetails = error;
+        errorDetails = error as Record<string, unknown>;
       } catch {
         errorMessage = String(error);
       }
