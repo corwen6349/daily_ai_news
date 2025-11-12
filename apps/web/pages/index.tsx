@@ -297,7 +297,7 @@ export default function HomePage() {
                   {articles.length === 0 && (
                     <div className="text-center py-12 text-slate-500">
                       <p className="text-lg">暂无资讯</p>
-                      <p className="text-sm mt-2">点击上方"抓取资讯"按钮获取最新内容</p>
+                      <p className="text-sm mt-2">点击上方&ldquo;抓取资讯&rdquo;按钮获取最新内容</p>
                     </div>
                   )}
                 </div>
