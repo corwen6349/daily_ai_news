@@ -1,269 +1,536 @@
-# 🤖 Daily AI News Platform# 🤖 AI 新闻聚合与生成平台# 🤖 AI 新闻聚合与生成平台# AI 新闻聚合与生成平台# AI 新闻聚合与生成平台
+# 🤖 AI Daily News Platform# 🤖 Daily AI News Platform# 🤖 AI 新闻聚合与生成平台# 🤖 AI 新闻聚合与生成平台# AI 新闻聚合与生成平台# AI 新闻聚合与生成平台
 
 
 
-> 重新实现：完全自动化的 AI 新闻采集、摘要与日报生成平台
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
+
+[![TypeScript](https://img.shields.io/badge/typescript-%3E%3D5.3.0-blue.svg)](https://www.typescriptlang.org/)> 重新实现：完全自动化的 AI 新闻采集、摘要与日报生成平台
+
+[![Next.js](https://img.shields.io/badge/next.js-14.2-black.svg)](https://nextjs.org/)
 
 
+
+> 一个现代化的 AI 新闻聚合平台，自动采集、智能摘要、生成日报并发布到 GitHub Pages
 
 ## ✨ 功能概要> 一个完全免费的自动化 AI 新闻聚合、内容摘要和发布平台。使用 Next.js、Supabase 和免费 AI API 构建。
 
+## ✨ 功能特性
+
 - 采集：支持多个 RSS/API 信息源
 
-- 摘要：接入 Google Gemini 与 DeepSeek 双路 AI
+- 📰 **订阅源管理** - 完整的 CRUD 操作管理 RSS 订阅源
 
-- 存储：Supabase 数据库（无配置时使用内存 Mock）
+- 🔄 **智能采集** - 自动抓取订阅源的今日资讯- 摘要：接入 Google Gemini 与 DeepSeek 双路 AI
 
-- 展示：Next.js 仪表盘 + API 路由[![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)> 一个完全免费的自动化 AI 新闻聚合、内容摘要和发布平台。使用 Next.js、Supabase 和免费 AI API 构建。
+- ☑️ **多选生成** - 勾选文章，一键生成 AI 日报
 
-- 发布：GitHub Pages 自动化发布日报
+- 🤖 **AI 摘要** - 集成 Google Gemini / DeepSeek 智能摘要- 存储：Supabase 数据库（无配置时使用内存 Mock）
 
-- 调度：Vercel Cron 或本地 scheduler 脚本[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
+- 📄 **日报生成** - 自动生成精美的 HTML 日报
+
+- 📤 **自动发布** - 一键发布到 GitHub Pages- 展示：Next.js 仪表盘 + API 路由[![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)> 一个完全免费的自动化 AI 新闻聚合、内容摘要和发布平台。使用 Next.js、Supabase 和免费 AI API 构建。
+
+- 💾 **数据持久化** - Supabase 数据库存储
+
+- 🎨 **现代化 UI** - 基于 Tailwind CSS 的美观界面- 发布：GitHub Pages 自动化发布日报
 
 
 
-## 🏗️ 架构说明[![TypeScript](https://img.shields.io/badge/typescript-%3E%3D5.3.0-blue.svg)](https://www.typescriptlang.org/)
+## 🏗️ 技术栈- 调度：Vercel Cron 或本地 scheduler 脚本[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
 
-```
 
-Next.js 前端 + API (apps/web)[![Next.js](https://img.shields.io/badge/next.js-%3E%3D14.0.0-black.svg)](https://nextjs.org/)
 
-└─ 调用 packages/db / fetchers / processors 完成数据流
+### 前端
+
+- **Next.js 14** - React 框架
+
+- **React 18** - UI 库## 🏗️ 架构说明[![TypeScript](https://img.shields.io/badge/typescript-%3E%3D5.3.0-blue.svg)](https://www.typescriptlang.org/)
+
+- **Tailwind CSS** - 样式框架
+
+- **SWR** - 数据获取```
+
+
+
+### 后端Next.js 前端 + API (apps/web)[![Next.js](https://img.shields.io/badge/next.js-%3E%3D14.0.0-black.svg)](https://nextjs.org/)
+
+- **Next.js API Routes** - Serverless API
+
+- **Supabase** - PostgreSQL 数据库└─ 调用 packages/db / fetchers / processors 完成数据流
+
+- **RSS Parser** - RSS 源解析
 
 Supabase 数据库（可选）[![GitHub License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)一个自动化的 AI 新闻聚合与生成平台，使用免费或低成本的公网资源部署。一个自动化的AI新闻聚合与生成平台，使用免费或低成本的公网资源部署。
 
-Gemini / DeepSeek 提供摘要
+### AI 服务
+
+- **Google Gemini 1.5 Flash** - 免费 AI 模型Gemini / DeepSeek 提供摘要
+
+- **DeepSeek Chat** - 备选 AI 模型
 
 Scheduler 定时触发采集## ✨ 核心功能
 
-Publisher 将日报发布到 GitHub Pages
+### 部署
+
+- **Vercel** - 前端托管Publisher 将日报发布到 GitHub Pages
+
+- **GitHub Pages** - 日报发布
 
 ```[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
 
+## 📦 项目结构
 
 
-## 🚀 快速开始- 📰 **信息源管理** - 添加和管理 RSS 源
 
-1. 复制 `.env.example` 为 `.env.local` 并填入密钥
+```
 
-2. 安装依赖：`npm install`- 🔄 **自动采集** - 每天定时采集最新资讯（完全免费）[![TypeScript](https://img.shields.io/badge/typescript-%3E%3D5.3.0-blue.svg)](https://www.typescriptlang.org/)
+daily_ai_news/## 🚀 快速开始- 📰 **信息源管理** - 添加和管理 RSS 源
 
-3. 启动本地开发：`npm run dev`
+├── apps/
 
-4. 手动触发采集：`curl -X POST http://localhost:3000/api/fetch-news`- 📄 **文章管理** - 展示采集的文章，支持勾选和过滤
+│   ├── web/                    # Next.js 应用1. 复制 `.env.example` 为 `.env.local` 并填入密钥
 
-5. 生成日报：`curl -X POST http://localhost:3000/api/reports -H 'Content-Type: application/json' -d '{"articleIds": ["xxx"]}'`
+│   │   ├── pages/
 
-- 🤖 **AI 摘要** - 使用免费 AI 模型生成文章摘要
+│   │   │   ├── api/           # API 路由2. 安装依赖：`npm install`- 🔄 **自动采集** - 每天定时采集最新资讯（完全免费）[![TypeScript](https://img.shields.io/badge/typescript-%3E%3D5.3.0-blue.svg)](https://www.typescriptlang.org/)
 
-## 📦 目录结构
+│   │   │   │   ├── articles.ts
 
-```- 📊 **日报生成** - 生成精美的 HTML 日报
+│   │   │   │   ├── sources.ts3. 启动本地开发：`npm run dev`
 
-apps/
+│   │   │   │   ├── fetch-news.ts
 
-  web/          # Next.js 仪表盘与 API- 📤 **自动发布** - 发布到 GitHub Pages 或其他平台## ✨ 核心功能## 🎯 核心功能## 🎯 核心功能
+│   │   │   │   ├── generate-report.ts4. 手动触发采集：`curl -X POST http://localhost:3000/api/fetch-news`- 📄 **文章管理** - 展示采集的文章，支持勾选和过滤
 
-  scheduler/    # 定时任务脚本
+│   │   │   │   └── reports.ts
 
-packages/- 🎯 **完全免费** - 所有服务都使用免费层
+│   │   │   └── index.tsx      # 主页面5. 生成日报：`curl -X POST http://localhost:3000/api/reports -H 'Content-Type: application/json' -d '{"articleIds": ["xxx"]}'`
 
-  ai/           # AI 摘要调用
+│   │   └── styles/            # 样式文件
 
-  config/       # 环境配置与默认信息源
+│   └── scheduler/             # 定时任务（可选）- 🤖 **AI 摘要** - 使用免费 AI 模型生成文章摘要
 
-  db/           # Supabase + 内存存储抽象
+├── packages/
 
-  fetchers/     # RSS 采集器## 🏗️ 架构概览
+│   ├── ai/                    # AI 服务封装## 📦 目录结构
+
+│   ├── config/                # 配置管理
+
+│   ├── db/                    # 数据库操作```- 📊 **日报生成** - 生成精美的 HTML 日报
+
+│   ├── fetchers/              # RSS 采集器
+
+│   ├── processors/            # 内容处理apps/
+
+│   └── publisher/             # 发布服务
+
+├── .env.example               # 环境变量模板  web/          # Next.js 仪表盘与 API- 📤 **自动发布** - 发布到 GitHub Pages 或其他平台## ✨ 核心功能## 🎯 核心功能## 🎯 核心功能
+
+├── vercel.json               # Vercel 配置
+
+├── DEPLOYMENT.md             # 部署指南  scheduler/    # 定时任务脚本
+
+└── QUICKSTART.md             # 快速开始
+
+```packages/- 🎯 **完全免费** - 所有服务都使用免费层
+
+
+
+## 🚀 快速开始  ai/           # AI 摘要调用
+
+
+
+### 1. 克隆项目  config/       # 环境配置与默认信息源
+
+
+
+```bash  db/           # Supabase + 内存存储抽象
+
+git clone https://github.com/corwen6349/daily_ai_news.git
+
+cd daily_ai_news  fetchers/     # RSS 采集器## 🏗️ 架构概览
+
+```
 
   processors/   # 摘要加工、日报生成
 
+### 2. 安装依赖
+
   publisher/    # GitHub 发布逻辑- 📰 **信息源管理** - 添加和管理 RSS 源
 
+```bash
+
+npm install```
+
 ```
 
 ```
+
+### 3. 配置环境变量
 
 ## 🧰 主要依赖
 
+复制 `.env.example` 为 `.env.local` 并填入必要的配置：
+
 - Next.js 14 / React 18 / SWR┌─────────────────────────────────────────────────────┐- 🔄 **自动采集** - 每天定时采集最新资讯（完全免费）
 
-- Typescript 5.3 / ESLint
+```bash
 
-- Supabase JS SDK│          Next.js 前端应用 (Vercel)                   │
+# Supabase 数据库- Typescript 5.3 / ESLint
+
+SUPABASE_URL=https://your-project.supabase.co
+
+SUPABASE_ANON_KEY=your_anon_key- Supabase JS SDK│          Next.js 前端应用 (Vercel)                   │
+
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 - RSS Parser / nanoid
 
-- Node 18+（支持原生 fetch）│  ┌──────────────┐    ┌──────────────┐  ┌──────────┐ │- 📄 **文章管理** - 展示采集的文章，支持勾选和过滤1. **信息源配置**: 网页端配置 RSS 源、API 源等1. **信息源配置**: 网页端配置RSS源、API源等
+# AI API（选择其一）
+
+GEMINI_API_KEY=your_gemini_api_key- Node 18+（支持原生 fetch）│  ┌──────────────┐    ┌──────────────┐  ┌──────────┐ │- 📄 **文章管理** - 展示采集的文章，支持勾选和过滤1. **信息源配置**: 网页端配置 RSS 源、API 源等1. **信息源配置**: 网页端配置RSS源、API源等
+
+# 或
+
+DEEPSEEK_API_KEY=your_deepseek_api_key
 
 
 
-## ☁️ Vercel 部署│  │ 信息源管理    │    │ 文章列表      │  │ 日报生成  │ │
+# GitHub Pages 发布（可选）## ☁️ Vercel 部署│  │ 信息源管理    │    │ 文章列表      │  │ 日报生成  │ │
 
-- `vercel.json` 已配置 npm install + build
+GITHUB_TOKEN=your_github_token
 
-- Cron job 每日 09:00 UTC 调用 `/api/fetch-news`│  └──────────────┘    └──────────────┘  └──────────┘ │- 🤖 **AI 摘要** - 使用免费 AI 模型生成文章摘要
+GITHUB_OWNER=your_github_username- `vercel.json` 已配置 npm install + build
 
-- 如需 GitHub Pages 发布，请配置 `GITHUB_TOKEN`、`GITHUB_REPO`
+GITHUB_REPO=your_repo_name
 
-└────────────────────┬────────────────────────────────┘
+```- Cron job 每日 09:00 UTC 调用 `/api/fetch-news`│  └──────────────┘    └──────────────┘  └──────────┘ │- 🤖 **AI 摘要** - 使用免费 AI 模型生成文章摘要
 
-## 📄 License
 
-MIT                     │- 📊 **日报生成** - 生成精美的 HTML 日报2. **自动采集**: 每日自动获取最新 AI 资讯2. **自动采集**: 每日自动获取最新AI资讯
 
+### 4. 启动开发服务器- 如需 GitHub Pages 发布，请配置 `GITHUB_TOKEN`、`GITHUB_REPO`
+
+
+
+```bash└────────────────────┬────────────────────────────────┘
+
+npm run dev
+
+```## 📄 License
+
+
+
+访问 http://localhost:3000MIT                     │- 📊 **日报生成** - 生成精美的 HTML 日报2. **自动采集**: 每日自动获取最新 AI 资讯2. **自动采集**: 每日自动获取最新AI资讯
+
+
+
+## 📖 使用指南
 
         ┌────────────┼────────────┐
 
+### 管理订阅源
+
         │            │            │- 📤 **自动发布** - 发布到 GitHub Pages 或其他平台
 
-        ▼            ▼            ▼
+1. 打开应用，切换到 **"订阅源管理"** 标签
 
-   ┌────────┐  ┌────────────┐  ┌──────────┐- 🎯 **完全免费** - 所有服务都使用免费层3. **内容展示**: 展示采集的资讯，支持勾选3. **内容展示**: 展示采集的资讯，支持勾选
+2. 点击 **"添加订阅源"** 按钮        ▼            ▼            ▼
 
-   │ RSS    │  │ Supabase   │  │ AI API   │
+3. 填写订阅源名称、URL 和分类
 
-   │ 源     │  │ PostgreSQL │  │ (Gemini/ │
+4. 可以编辑或删除现有订阅源   ┌────────┐  ┌────────────┐  ┌──────────┐- 🎯 **完全免费** - 所有服务都使用免费层3. **内容展示**: 展示采集的资讯，支持勾选3. **内容展示**: 展示采集的资讯，支持勾选
 
-   │采集   │  │ 数据库     │  │ DeepSeek)│
 
-   └────────┘  └────────────┘  └──────────┘## 🏗️ 架构概览4. **AI 摘要**: 使用免费 AI 模型 (Google Gemini/DeepSeek) 进行智能摘要4. **AI摘要**: 使用免费AI模型(OpenAI/Gemini/DeepSeek)进行智能摘要
 
-        │            ▲
+### 抓取资讯   │ RSS    │  │ Supabase   │  │ AI API   │
 
-        └────────────┼────────────┐
+
+
+1. 切换到 **"资讯列表"** 标签   │ 源     │  │ PostgreSQL │  │ (Gemini/ │
+
+2. 点击 **"抓取资讯"** 按钮
+
+3. 系统会自动抓取所有订阅源的今日资讯   │采集   │  │ 数据库     │  │ DeepSeek)│
+
+
+
+### 生成日报   └────────┘  └────────────┘  └──────────┘## 🏗️ 架构概览4. **AI 摘要**: 使用免费 AI 模型 (Google Gemini/DeepSeek) 进行智能摘要4. **AI摘要**: 使用免费AI模型(OpenAI/Gemini/DeepSeek)进行智能摘要
+
+
+
+1. 在资讯列表中勾选要生成日报的文章        │            ▲
+
+2. 点击 **"生成日报"** 按钮
+
+3. AI 会自动生成摘要和日报        └────────────┼────────────┐
+
+4. 如果配置了 GitHub，会自动发布到 GitHub Pages
 
                      │            │
 
+### 查看历史日报
+
                      ▼            ▼```5. **自动发布**: 生成静态 HTML 发布到 GitHub Pages5. **自动发布**: 生成静态HTML发布到GitHub Pages
+
+切换到 **"历史日报"** 标签查看所有已生成的日报
 
             ┌─────────────────┐  ┌────────────┐
 
+## 🌐 部署到 Vercel
+
             │ 数据处理 Pipeline│  │ GitHub     │┌─────────────────────────────────────────────────────┐
+
+详细部署步骤请查看 [DEPLOYMENT.md](./DEPLOYMENT.md)
 
             │ (提取/清理/总结)│  │ Pages 发布 │
 
+### 快速部署
+
             └─────────────────┘  └────────────┘│          Next.js 前端应用 (Vercel)                   │
 
-```
+1. Fork 本仓库到你的 GitHub
 
-│  ┌──────────────┐    ┌──────────────┐  ┌──────────┐ │
+2. 在 [Vercel](https://vercel.com) 导入项目```
 
-## 🚀 快速开始
+3. 配置环境变量
 
-│  │ 信息源管理    │    │ 文章列表      │  │ 日报生成  │ │## 🏗️ 架构方案（成本优化）## 🏗️ 架构方案（成本优化）
+4. 点击部署│  ┌──────────────┐    ┌──────────────┐  ┌──────────┐ │
 
-### 1. 环境变量配置
 
-│  └──────────────┘    └──────────────┘  └──────────┘ │
+
+## 🔧 API 接口## 🚀 快速开始
+
+
+
+### 订阅源管理│  │ 信息源管理    │    │ 文章列表      │  │ 日报生成  │ │## 🏗️ 架构方案（成本优化）## 🏗️ 架构方案（成本优化）
+
+
+
+- `GET /api/sources` - 获取所有订阅源### 1. 环境变量配置
+
+- `POST /api/sources` - 添加新订阅源
+
+- `PUT /api/sources` - 更新订阅源│  └──────────────┘    └──────────────┘  └──────────┘ │
+
+- `DELETE /api/sources` - 删除订阅源
 
 复制 `.env.example` 并创建 `.env.local`：
 
+### 资讯管理
+
 └─────────────────────────────────────────────────────┘
 
-```bash
+- `GET /api/articles` - 获取文章列表
 
-# API Keys                    ↓
+- `POST /api/fetch-news` - 抓取最新资讯```bash
 
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+
+
+### 日报生成# API Keys                    ↓
+
+
+
+- `POST /api/generate-report` - 生成 AI 日报NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+
+- `GET /api/reports` - 获取历史日报
 
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key┌─────────────────────────────────────────────────────┐### 后端服务### 后端服务
 
+## 🔑 环境变量说明
+
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-│           Next.js API Routes (Serverless)            │
+| 变量名 | 必需 | 说明 |
 
-# AI API Keys
+|--------|------|------|│           Next.js API Routes (Serverless)            │
 
-GEMINI_API_KEY=your-gemini-key│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │- **运行环境**: Vercel Free- **运行环境**: Vercel Free / Railway Free / Render Free
+| `SUPABASE_URL` | ✅ | Supabase 项目 URL |
 
-DEEPSEEK_API_KEY=your-deepseek-key
+| `SUPABASE_ANON_KEY` | ✅ | Supabase 匿名密钥 |# AI API Keys
 
-│  │ /sources │ │/articles │ │/fetch... │ │ /reports │ │
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase 服务密钥 |
 
-# GitHub Publishing
+| `GEMINI_API_KEY` | ✅* | Google Gemini API 密钥 |GEMINI_API_KEY=your-gemini-key│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │- **运行环境**: Vercel Free- **运行环境**: Vercel Free / Railway Free / Render Free
 
-GITHUB_TOKEN=your-github-token│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ │- **数据库**: Supabase Free (PostgreSQL，500MB)- **数据库**: Supabase Free (PostgreSQL) / Firebase Free
+| `DEEPSEEK_API_KEY` | ✅* | DeepSeek API 密钥 |
 
-GITHUB_REPO=your-username/repo-name
+| `GITHUB_TOKEN` | ❌ | GitHub 个人访问令牌 |DEEPSEEK_API_KEY=your-deepseek-key
+
+| `GITHUB_OWNER` | ❌ | GitHub 用户名 |
+
+| `GITHUB_REPO` | ❌ | GitHub 仓库名 |│  │ /sources │ │/articles │ │/fetch... │ │ /reports │ │
+
+
+
+\* 至少需要配置一个 AI API Key# GitHub Publishing
+
+
+
+## 📚 相关文档GITHUB_TOKEN=your-github-token│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ │- **数据库**: Supabase Free (PostgreSQL，500MB)- **数据库**: Supabase Free (PostgreSQL) / Firebase Free
+
+
+
+- [快速开始指南](./QUICKSTART.md)GITHUB_REPO=your-username/repo-name
+
+- [详细部署文档](./DEPLOYMENT.md)
 
 GITHUB_BRANCH=main└─────────────────────────────────────────────────────┘
 
+## 🛠️ 开发
 
+
+
+### 安装依赖
 
 # 其他配置          ↓               ↓              ↓- **存储**: 完全云存储- **存储**: 无需本地存储，全部使用云服务
 
-NODE_ENV=production
+```bash
+
+npm installNODE_ENV=production
+
+```
 
 ```    ┌───────────────┐  ┌──────────┐  ┌──────────┐
 
+### 启动开发服务器
 
 
-### 2. 本地开发    │ Supabase DB   │  │ Gemini   │  │ DeepSeek │
-
-
-
-```bash    │ PostgreSQL    │  │ API      │  │ API      │
-
-# 安装依赖
-
-pnpm install    └───────────────┘  └──────────┘  └──────────┘### 前端应用### 前端应用
-
-
-
-# 运行开发服务器```
-
-pnpm dev
-
-- **框架**: Next.js 14 + React 18- **网页配置端**: Next.js / React 部署在 Vercel
-
-# 打开浏览器
-
-http://localhost:3000## 💰 成本预估
-
-```
-
-- **部署**: Vercel (自动部署)- **静态日报**: GitHub Pages (免费)
-
-### 3. 部署到 Vercel
-
-| 服务 | 方案 | 成本/月 |
-
-#### 方式 A：一键部署（推荐）
-
-|------|------|---------|- **静态日报**: GitHub Pages (免费)
-
-点击按钮自动部署到 Vercel：
-
-| 服务器 | Vercel Free | ¥0 |
-
-```
-
-https://vercel.com/new?clone-url=https://github.com/corwen6349/daily_ai_news| 数据库 | Supabase Free (500MB) | ¥0 |### AI模型集成
-
-```
-
-| AI 模型 | Gemini Free | ¥0 |
-
-#### 方式 B：命令行部署
-
-| CDN | 内置 | ¥0 |### AI 模型集成- **OpenAI**: 免费trial（$5 credit）+ 付费按量（月成本 $2-5）
 
 ```bash
 
-# 安装 Vercel CLI| **总计** | | **¥0** |
+npm run dev### 2. 本地开发    │ Supabase DB   │  │ Gemini   │  │ DeepSeek │
 
-npm i -g vercel
+```
 
-- **Google Gemini**: 免费额度（50请求/分钟，150万 tokens/月）- **Google Gemini**: 免费额度（50请求/分钟，月150万免费tokens）
+
+
+### 构建生产版本
+
+```bash    │ PostgreSQL    │  │ API      │  │ API      │
+
+```bash
+
+npm run build# 安装依赖
+
+```
+
+pnpm install    └───────────────┘  └──────────┘  └──────────┘### 前端应用### 前端应用
+
+### 类型检查
+
+
+
+```bash
+
+npm run typecheck# 运行开发服务器```
+
+```
+
+pnpm dev
+
+## 🤝 贡献
+
+- **框架**: Next.js 14 + React 18- **网页配置端**: Next.js / React 部署在 Vercel
+
+欢迎提交 Issue 和 Pull Request！
+
+# 打开浏览器
+
+## 📄 许可证
+
+http://localhost:3000## 💰 成本预估
+
+[MIT License](LICENSE)
+
+```
+
+## 🔗 相关链接
+
+- **部署**: Vercel (自动部署)- **静态日报**: GitHub Pages (免费)
+
+- [Supabase](https://supabase.com) - 数据库服务
+
+- [Vercel](https://vercel.com) - 部署平台### 3. 部署到 Vercel
+
+- [Google AI Studio](https://makersuite.google.com) - Gemini API
+
+- [DeepSeek](https://platform.deepseek.com) - DeepSeek API| 服务 | 方案 | 成本/月 |
+
+- [GitHub Pages](https://pages.github.com) - 静态网站托管
+
+#### 方式 A：一键部署（推荐）
+
+## 💡 常见问题
+
+|------|------|---------|- **静态日报**: GitHub Pages (免费)
+
+### 如何获取免费的 AI API Key？
+
+点击按钮自动部署到 Vercel：
+
+**Google Gemini**：
+
+1. 访问 https://makersuite.google.com/app/apikey| 服务器 | Vercel Free | ¥0 |
+
+2. 点击 "Get API Key"
+
+3. 复制密钥```
+
+
+
+**DeepSeek**：https://vercel.com/new?clone-url=https://github.com/corwen6349/daily_ai_news| 数据库 | Supabase Free (500MB) | ¥0 |### AI模型集成
+
+1. 访问 https://platform.deepseek.com
+
+2. 注册账号```
+
+3. 创建 API Key
+
+| AI 模型 | Gemini Free | ¥0 |
+
+### 如何配置 GitHub Pages？
+
+#### 方式 B：命令行部署
+
+1. 创建一个新的 GitHub 仓库
+
+2. 在仓库 Settings > Pages 中启用 GitHub Pages| CDN | 内置 | ¥0 |### AI 模型集成- **OpenAI**: 免费trial（$5 credit）+ 付费按量（月成本 $2-5）
+
+3. 选择 gh-pages 分支
+
+4. 在本项目配置 GITHUB_TOKEN 等环境变量```bash
+
+
+
+### 数据存储在哪里？# 安装 Vercel CLI| **总计** | | **¥0** |
+
+
+
+所有数据存储在 Supabase PostgreSQL 数据库中，包括：npm i -g vercel
+
+- 订阅源列表
+
+- 采集的文章- **Google Gemini**: 免费额度（50请求/分钟，150万 tokens/月）- **Google Gemini**: 免费额度（50请求/分钟，月150万免费tokens）
+
+- 生成的日报
 
 # 登录
 
+## 📞 支持
+
 vercel login## 🚀 快速开始
 
+如有问题，请在 [GitHub Issues](https://github.com/corwen6349/daily_ai_news/issues) 提交。
 
+
+
+---
 
 # 部署- **DeepSeek**: 按量计费，非常便宜（¥0.1-1/月）- **DeepSeek**: 免费开源模型或付费API（月成本 ¥1-2）
+
+⭐ 如果这个项目对你有帮助，欢迎 Star！
 
 vercel
 
