@@ -211,23 +211,22 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
     return { inserted, updated };
   }
 
-  // 将代码字段映射到数据库字�?
+  // 将代码字段映射到数据库字段
+  // 注意：不包含 id 字段，让 Supabase 自动生成 UUID
   const dbArticles = articles.map(article => ({
-    id: article.id,
     source_id: article.source_id,
     title: article.title,
     link: article.url,  // url -> link
     summary: article.summary,
     content: article.content,
     pub_date: article.published_at,  // published_at -> pub_date
-    created_at: article.created_at
   }));
 
   try {
     const { error } = await getSupabase()
       .from('articles')
       .upsert(dbArticles, {
-        onConflict: 'link',  // 注意这里改为 link
+        onConflict: 'link',
         ignoreDuplicates: false
       });
       
@@ -236,7 +235,7 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
     }
     return { inserted: articles.length, updated: 0 };
   } catch (error) {
-    // 如果是我们抛出的错误，直接传�?
+    // 如果是我们抛出的错误，直接传递
     if (error instanceof Error) {
       throw error;
     }
@@ -248,7 +247,7 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
 export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
   if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
-    return store.articles.filter((article) => ids.includes(article.id));
+    return store.articles.filter((article) => article.id && ids.includes(article.id));
   }
 
   try {
@@ -274,7 +273,7 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
     }));
   } catch (error) {
     console.error('Error in getArticlesByIds, falling back to memory store:', error);
-    return getMemoryStore().articles.filter((article) => ids.includes(article.id));
+    return getMemoryStore().articles.filter((article) => article.id && ids.includes(article.id));
   }
 }
 

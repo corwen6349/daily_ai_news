@@ -7,7 +7,7 @@ export interface Source {
 }
 
 export interface Article {
-  id: string;
+  id?: string;  // 可选，让 Supabase 自动生成 UUID
   source_id: string;
   title: string;
   url: string;

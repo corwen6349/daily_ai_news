@@ -1,6 +1,5 @@
 import Parser from 'rss-parser';
 import { Source, Article } from '@daily-ai-news/db';
-import { nanoid } from 'nanoid';
 
 const parser = new Parser<{ link?: string; contentSnippet?: string; isoDate?: string }>({
   timeout: 10000, // 10秒超时
@@ -60,7 +59,6 @@ export async function fetchArticlesFromSources(sources: Source[]): Promise<Artic
         
         todayCount++;
         articles.push({
-          id: nanoid(),
           source_id: source.id,
           title: item.title,
           url: item.link,

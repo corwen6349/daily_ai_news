@@ -273,21 +273,21 @@ export default function HomePage() {
                 </div>
 
                 <div className="space-y-4">
-                  {articles.map(article => (
+                  {articles.filter(article => article.id).map(article => (
                     <div 
                       key={article.id}
                       className={`border rounded-lg p-5 transition-all cursor-pointer ${
-                        selectedArticles.has(article.id)
+                        selectedArticles.has(article.id!)
                           ? 'bg-blue-50 border-blue-300 shadow-md'
                           : 'bg-white hover:shadow-md'
                       }`}
-                      onClick={() => toggleArticleSelection(article.id)}
+                      onClick={() => toggleArticleSelection(article.id!)}
                     >
                       <div className="flex items-start gap-4">
                         <input
                           type="checkbox"
-                          checked={selectedArticles.has(article.id)}
-                          onChange={() => toggleArticleSelection(article.id)}
+                          checked={selectedArticles.has(article.id!)}
+                          onChange={() => toggleArticleSelection(article.id!)}
                           className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                         />
                         <div className="flex-1">
