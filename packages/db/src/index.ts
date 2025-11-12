@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import { defaultSources, getConfig } from '@daily-ai-news/config';
-import { getSupabase } from './supabase';
+import { getSupabase, hasSupabaseConfig } from './supabase';
 import { Article, Report, Source } from './types';
 
 interface MemoryStore {
@@ -29,29 +29,31 @@ function getMemoryStore(): MemoryStore {
   return globalThis.__dailyAiNewsStore;
 }
 
-function supabaseAvailable() {
-  const { supabaseUrl, supabaseAnonKey } = getConfig();
-  return Boolean(supabaseUrl && supabaseAnonKey);
-}
-
 export async function listSources(): Promise<Source[]> {
-  if (!supabaseAvailable()) {
+  if (!hasSupabaseConfig()) {
+    console.log('Using memory store for sources');
     return getMemoryStore().sources;
   }
 
-  const { data, error } = await getSupabase()
-    .from('sources')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await getSupabase()
+      .from('sources')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    throw error;
+    if (error) {
+      console.error('Supabase error, falling back to memory store:', error);
+      return getMemoryStore().sources;
+    }
+    return (data ?? []) as Source[];
+  } catch (error) {
+    console.error('Error accessing Supabase, using memory store:', error);
+    return getMemoryStore().sources;
   }
-  return (data ?? []) as Source[];
 }
 
 export async function createSource(input: Omit<Source, 'id' | 'created_at'>): Promise<Source> {
-  if (!supabaseAvailable()) {
+  if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
     const source: Source = {
       ...input,
@@ -79,7 +81,7 @@ export async function createSource(input: Omit<Source, 'id' | 'created_at'>): Pr
 }
 
 export async function updateSource(id: string, input: Partial<Omit<Source, 'id' | 'created_at'>>): Promise<Source> {
-  if (!supabaseAvailable()) {
+  if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
     const index = store.sources.findIndex(s => s.id === id);
     if (index === -1) {
@@ -103,7 +105,7 @@ export async function updateSource(id: string, input: Partial<Omit<Source, 'id' 
 }
 
 export async function deleteSource(id: string): Promise<void> {
-  if (!supabaseAvailable()) {
+  if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
     store.sources = store.sources.filter(s => s.id !== id);
     return;
@@ -128,7 +130,7 @@ export async function listArticles({
   offset?: number;
   sourceId?: string;
 } = {}): Promise<Article[]> {
-  if (!supabaseAvailable()) {
+  if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
     const articles = sourceId
       ? store.articles.filter((article) => article.source_id === sourceId)
@@ -159,7 +161,7 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
     return { inserted: 0, updated: 0 };
   }
 
-  if (!supabaseAvailable()) {
+  if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
     let inserted = 0;
     let updated = 0;
@@ -195,7 +197,7 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
 }
 
 export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
-  if (!supabaseAvailable()) {
+  if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
     return store.articles.filter((article) => ids.includes(article.id));
   }
@@ -212,7 +214,7 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
 }
 
 export async function listReports(): Promise<Report[]> {
-  if (!supabaseAvailable()) {
+  if (!hasSupabaseConfig()) {
     return getMemoryStore().reports;
   }
 
@@ -238,7 +240,7 @@ export async function saveReport({
   publishedUrl?: string;
   articleIds: string[];
 }): Promise<Report> {
-  if (!supabaseAvailable()) {
+  if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
     const report: Report = {
       id: nanoid(),
