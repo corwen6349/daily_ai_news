@@ -335,17 +335,50 @@ export async function saveReport({
   const { data, error } = await getSupabase()
     .from('reports')
     .insert({
-      title: `AI Daily News - ${date}`,  // 添加 title 字段
-      content: html,  // content 字段
-      html_content: html,  // html_content 字段
-      publish_url: publishedUrl,  // 注意下划�?
-      report_date: date,  // date -> report_date
+      title: `AI Daily News - ${date}`,
+      content: html,
+      html_content: html,
+      publish_url: publishedUrl,
+      report_date: date,
       article_ids: articleIds
     })
     .select()
     .single();
 
   if (error) {
+    // 如果错误是关于 article_ids 字段不存在，尝试不包含该字段
+    if (error.code === 'PGRST204' && error.message?.includes('article_ids')) {
+      console.warn('⚠️  reports 表缺少 article_ids 字段，尝试不包含该字段保存...');
+      console.warn('提示：在 Supabase SQL Editor 中执行: ALTER TABLE reports ADD COLUMN article_ids TEXT[] DEFAULT \'{}\';');
+      
+      // 移除 article_ids 字段重试
+      const retryResult = await getSupabase()
+        .from('reports')
+        .insert({
+          title: `AI Daily News - ${date}`,
+          content: html,
+          html_content: html,
+          publish_url: publishedUrl,
+          report_date: date
+        })
+        .select()
+        .single();
+      
+      if (retryResult.error) {
+        throw handleSupabaseError(retryResult.error, 'saveReport');
+      }
+      
+      // 返回结果，article_ids 为空数组
+      return {
+        id: retryResult.data.id,
+        date: retryResult.data.report_date,
+        html: retryResult.data.html_content,
+        published_url: retryResult.data.publish_url,
+        article_ids: [],
+        created_at: retryResult.data.created_at
+      } as Report;
+    }
+    
     throw handleSupabaseError(error, 'saveReport');
   }
   
