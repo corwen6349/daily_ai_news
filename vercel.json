@@ -1,8 +1,13 @@
-{{{
+{{{{
 
-  "version": 2,
+  "buildCommand": "npm run build --workspace @daily-ai-news/web",
 
-  "buildCommand": "npm run build --workspace @daily-ai-news/web",  "installCommand": "npm install",  "buildCommand": "npm run build",
+  "outputDirectory": "apps/web/.next",  "version": 2,
+
+  "installCommand": "npm install"
+
+}  "buildCommand": "npm run build --workspace @daily-ai-news/web",  "installCommand": "npm install",  "buildCommand": "npm run build",
+
 
   "outputDirectory": "apps/web/.next",
 
