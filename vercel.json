@@ -4,14 +4,28 @@
   "framework": "nextjs",
   "regions": ["sfo1"],
   "env": {
-    "AI_PROVIDER": "@ai_provider",
-    "AI_MODEL": "@ai_model",
+    "NODE_ENV": "production",
+    "AI_PROVIDER": "gemini",
+    "AI_MODEL": "gemini-1.5-flash",
     "DAILY_ARTICLE_COUNT": "10",
     "MAX_SUMMARY_TOKENS": "300"
   },
   "git": {
     "deploymentEnabled": {
+      "master": true,
       "main": true
     }
-  }
+  },
+  "functions": {
+    "apps/web/pages/api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/fetch-news",
+      "schedule": "0 9 * * *"
+    }
+  ]
 }

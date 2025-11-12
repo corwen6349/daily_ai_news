@@ -43,26 +43,51 @@
 
 ## 🚀 快速开始
 
-### 1. 环境准备
+### 📌 方式 1：一键部署到 Vercel（推荐）
+
+1. **Fork 本仓库**到你的 GitHub 账户
+
+2. **访问 [Vercel](https://vercel.com)** 并登录
+
+3. **新建项目** → 选择 "Import Git Repository"
+
+4. **搜索并导入** `daily_ai_news` 仓库
+
+5. **配置环境变量**：
+   ```bash
+   SUPABASE_URL=https://xxxxx.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=xxxxx
+   GEMINI_API_KEY=xxxxx
+   NEXT_PUBLIC_API_URL=https://your-domain.vercel.app
+   ```
+
+6. **点击 Deploy** - 完成！🎉
+
+👉 **详细部署指南**: 见 [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)
+
+### 📌 方式 2：本地开发
+
 ```bash
+# 1. 环境准备
 git clone <repo>
 cd daily_ai_news
 npm install
-```
 
-### 2. 配置环境变量
-```bash
+# 2. 配置环境变量
 cp .env.example .env.local
-```
+# 编辑 .env.local 填入 API 密钥
 
-### 3. 本地开发
-```bash
+# 3. 启动开发服务器
 npm run dev
+# 访问 http://localhost:3000
 ```
 
-### 4. 部署
-- 前端: Push to GitHub → Vercel auto-deploy
-- 日报: GitHub Actions 定时运行 → 发布到 gh-pages 分支
+### 📌 方式 3：Docker 部署
+
+```bash
+docker build -t daily-ai-news .
+docker run -p 3000:3000 --env-file .env.local daily-ai-news
+```
 
 ## 📁 项目结构
 
@@ -132,6 +157,64 @@ daily_ai_news/
 - GitHub Actions Secrets 管理敏感信息
 - CORS 配置
 - Rate limiting
+
+## 🎯 快速参考
+
+### API 端点
+
+```bash
+# 健康检查
+GET /api/health
+
+# 获取信息源
+GET /api/sources
+
+# 添加信息源
+POST /api/sources { name, url, category }
+
+# 获取文章列表
+GET /api/articles
+
+# 手动采集新闻
+POST /api/fetch-news
+
+# 生成日报
+POST /api/reports { date, selectedArticles }
+
+# 获取日报
+GET /api/reports?date=YYYY-MM-DD
+```
+
+### 环境变量
+
+| 变量 | 说明 | 必需 |
+|------|------|------|
+| `SUPABASE_URL` | Supabase 项目 URL | ✅ |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase 密钥 | ✅ |
+| `GEMINI_API_KEY` | Google Gemini API Key | ✅ |
+| `DEEPSEEK_API_KEY` | DeepSeek API Key | ❌ |
+| `NEXT_PUBLIC_API_URL` | 前端 API URL | ✅ |
+| `AI_PROVIDER` | AI 提供商（gemini/deepseek） | ❌ |
+| `DAILY_ARTICLE_COUNT` | 每日文章数（默认 10） | ❌ |
+
+### 常用命令
+
+```bash
+# 本地开发
+npm run dev
+
+# 构建生产版本
+npm run build
+
+# 启动生产服务器
+npm start
+
+# 代码检查
+npm run lint
+
+# 代码格式化
+npm run format
+```
 
 ## 📄 License
 
