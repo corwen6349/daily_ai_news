@@ -140,8 +140,8 @@ export async function listArticles({
 
   let query = getSupabase()
     .from('articles')
-    .select('*')
-    .order('published_at', { ascending: false })
+    .select('*, link:url, pub_date:published_at')
+    .order('pub_date', { ascending: false })
     .range(offset, offset + limit - 1);
     
   if (sourceId) {
@@ -151,9 +151,21 @@ export async function listArticles({
   const { data, error } = await query as any;
   
   if (error) {
+    console.error('Supabase error fetching articles:', error);
     throw error;
   }
-  return data ?? [];
+  
+  // 将数据库字段映射到代码字段
+  return (data ?? []).map((item: any) => ({
+    id: item.id,
+    source_id: item.source_id,
+    title: item.title,
+    url: item.link,
+    summary: item.summary,
+    content: item.content,
+    published_at: item.pub_date,
+    created_at: item.created_at
+  }));
 }
 
 export async function storeArticles(articles: Article[]): Promise<{ inserted: number; updated: number }> {
@@ -183,14 +195,27 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
     return { inserted, updated };
   }
 
+  // 将代码字段映射到数据库字段
+  const dbArticles = articles.map(article => ({
+    id: article.id,
+    source_id: article.source_id,
+    title: article.title,
+    link: article.url,  // url -> link
+    summary: article.summary,
+    content: article.content,
+    pub_date: article.published_at,  // published_at -> pub_date
+    created_at: article.created_at
+  }));
+
   const { error } = await getSupabase()
     .from('articles')
-    .upsert(articles, {
-      onConflict: 'url',
+    .upsert(dbArticles, {
+      onConflict: 'link',  // 注意这里改为 link
       ignoreDuplicates: false
     });
     
   if (error) {
+    console.error('Supabase error storing articles:', error);
     throw error;
   }
   return { inserted: articles.length, updated: 0 };
@@ -208,9 +233,21 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
     .in('id', ids);
     
   if (error) {
+    console.error('Supabase error getting articles by ids:', error);
     throw error;
   }
-  return (data ?? []) as Article[];
+  
+  // 将数据库字段映射到代码字段
+  return (data ?? []).map((item: any) => ({
+    id: item.id,
+    source_id: item.source_id,
+    title: item.title,
+    url: item.link,
+    summary: item.summary,
+    content: item.content,
+    published_at: item.pub_date,
+    created_at: item.created_at
+  }));
 }
 
 export async function listReports(): Promise<Report[]> {
@@ -221,12 +258,22 @@ export async function listReports(): Promise<Report[]> {
   const { data, error } = await getSupabase()
     .from('reports')
     .select('*')
-    .order('date', { ascending: false });
+    .order('report_date', { ascending: false });
 
   if (error) {
+    console.error('Supabase error fetching reports:', error);
     throw error;
   }
-  return (data ?? []) as Report[];
+  
+  // 将数据库字段映射到代码字段
+  return (data ?? []).map((item: any) => ({
+    id: item.id,
+    date: item.report_date,
+    html: item.html_content,
+    published_url: item.publish_url,
+    article_ids: item.article_ids || [],
+    created_at: item.created_at
+  }));
 }
 
 export async function saveReport({
@@ -257,18 +304,30 @@ export async function saveReport({
   const { data, error } = await getSupabase()
     .from('reports')
     .insert({
-      date,
-      html,
-      published_url: publishedUrl,
+      title: `AI Daily News - ${date}`,  // 添加 title 字段
+      content: html,  // content 字段
+      html_content: html,  // html_content 字段
+      publish_url: publishedUrl,  // 注意下划线
+      report_date: date,  // date -> report_date
       article_ids: articleIds
     })
     .select()
     .single();
 
   if (error) {
+    console.error('Supabase error saving report:', error);
     throw error;
   }
-  return data as Report;
+  
+  // 将数据库字段映射回代码字段
+  return {
+    id: data.id,
+    date: data.report_date,
+    html: data.html_content,
+    published_url: data.publish_url,
+    article_ids: data.article_ids || [],
+    created_at: data.created_at
+  } as Report;
 }
 
 export type { Source, Article, Report } from './types';

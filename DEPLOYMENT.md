@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS reports (
   html_content TEXT,
   publish_url TEXT,
   report_date DATE NOT NULL,
+  article_ids TEXT[] DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
