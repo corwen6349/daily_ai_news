@@ -2,16 +2,23 @@
 import useSWR from 'swr';
 import { Source, Article, Report } from '@daily-ai-news/db';
 
-const fetcher = (url: string) => fetch(url).then(res => res.json()).then(data => {
+const fetcher = (url: string) => fetch(url).then(async res => {
+  const data = await res.json();
+  
   // 确保返回数组，处理错误响应
   if (data && typeof data === 'object') {
     if (data.error) {
-      console.error('API error:', data.error);
+      const errorMsg = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+      console.error(`API error from ${url}:`, errorMsg);
+      if (data.stack) console.error('Stack:', data.stack);
+      
       // 如果有备用数据字段，使用它
       if (Array.isArray(data.sources)) return data.sources;
       if (Array.isArray(data.articles)) return data.articles;
       if (Array.isArray(data.reports)) return data.reports;
-      return [];
+      
+      // 抛出错误以便 SWR 可以捕获
+      throw new Error(errorMsg);
     }
     if (Array.isArray(data)) return data;
   }

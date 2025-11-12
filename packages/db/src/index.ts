@@ -138,34 +138,39 @@ export async function listArticles({
     return articles.slice(offset, offset + limit);
   }
 
-  let query = getSupabase()
-    .from('articles')
-    .select('*, link:url, pub_date:published_at')
-    .order('pub_date', { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    let query = getSupabase()
+      .from('articles')
+      .select('*')
+      .order('pub_date', { ascending: false })
+      .range(offset, offset + limit - 1);
+      
+    if (sourceId) {
+      query = query.eq('source_id', sourceId);
+    }
     
-  if (sourceId) {
-    query = query.eq('source_id', sourceId);
+    const { data, error } = await query as any;
+    
+    if (error) {
+      console.error('Supabase error fetching articles:', error);
+      throw error;
+    }
+    
+    // 将数据库字段映射到代码字段
+    return (data ?? []).map((item: any) => ({
+      id: item.id,
+      source_id: item.source_id,
+      title: item.title,
+      url: item.link,
+      summary: item.summary,
+      content: item.content,
+      published_at: item.pub_date,
+      created_at: item.created_at
+    }));
+  } catch (error) {
+    console.error('Error in listArticles, falling back to memory store:', error);
+    return getMemoryStore().articles.slice(offset, offset + limit);
   }
-  
-  const { data, error } = await query as any;
-  
-  if (error) {
-    console.error('Supabase error fetching articles:', error);
-    throw error;
-  }
-  
-  // 将数据库字段映射到代码字段
-  return (data ?? []).map((item: any) => ({
-    id: item.id,
-    source_id: item.source_id,
-    title: item.title,
-    url: item.link,
-    summary: item.summary,
-    content: item.content,
-    published_at: item.pub_date,
-    created_at: item.created_at
-  }));
 }
 
 export async function storeArticles(articles: Article[]): Promise<{ inserted: number; updated: number }> {
@@ -227,27 +232,32 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
     return store.articles.filter((article) => ids.includes(article.id));
   }
 
-  const { data, error } = await getSupabase()
-    .from('articles')
-    .select('*')
-    .in('id', ids);
+  try {
+    const { data, error } = await getSupabase()
+      .from('articles')
+      .select('*')
+      .in('id', ids);
+      
+    if (error) {
+      console.error('Supabase error getting articles by ids:', error);
+      throw error;
+    }
     
-  if (error) {
-    console.error('Supabase error getting articles by ids:', error);
-    throw error;
+    // 将数据库字段映射到代码字段
+    return (data ?? []).map((item: any) => ({
+      id: item.id,
+      source_id: item.source_id,
+      title: item.title,
+      url: item.link,
+      summary: item.summary,
+      content: item.content,
+      published_at: item.pub_date,
+      created_at: item.created_at
+    }));
+  } catch (error) {
+    console.error('Error in getArticlesByIds, falling back to memory store:', error);
+    return getMemoryStore().articles.filter((article) => ids.includes(article.id));
   }
-  
-  // 将数据库字段映射到代码字段
-  return (data ?? []).map((item: any) => ({
-    id: item.id,
-    source_id: item.source_id,
-    title: item.title,
-    url: item.link,
-    summary: item.summary,
-    content: item.content,
-    published_at: item.pub_date,
-    created_at: item.created_at
-  }));
 }
 
 export async function listReports(): Promise<Report[]> {
@@ -255,25 +265,30 @@ export async function listReports(): Promise<Report[]> {
     return getMemoryStore().reports;
   }
 
-  const { data, error } = await getSupabase()
-    .from('reports')
-    .select('*')
-    .order('report_date', { ascending: false });
+  try {
+    const { data, error } = await getSupabase()
+      .from('reports')
+      .select('*')
+      .order('report_date', { ascending: false });
 
-  if (error) {
-    console.error('Supabase error fetching reports:', error);
-    throw error;
+    if (error) {
+      console.error('Supabase error fetching reports:', error);
+      throw error;
+    }
+    
+    // 将数据库字段映射到代码字段
+    return (data ?? []).map((item: any) => ({
+      id: item.id,
+      date: item.report_date,
+      html: item.html_content,
+      published_url: item.publish_url,
+      article_ids: item.article_ids || [],
+      created_at: item.created_at
+    }));
+  } catch (error) {
+    console.error('Error in listReports, falling back to memory store:', error);
+    return getMemoryStore().reports;
   }
-  
-  // 将数据库字段映射到代码字段
-  return (data ?? []).map((item: any) => ({
-    id: item.id,
-    date: item.report_date,
-    html: item.html_content,
-    published_url: item.publish_url,
-    article_ids: item.article_ids || [],
-    created_at: item.created_at
-  }));
 }
 
 export async function saveReport({

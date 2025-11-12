@@ -10,8 +10,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const result = Array.isArray(articles) ? articles : [];
       res.status(200).json(result);
     } catch (error) {
-      console.error('Error fetching articles:', error);
-      res.status(500).json({ error: String(error), articles: [] });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      console.error('Error fetching articles:', errorMsg, errorStack);
+      res.status(500).json({ 
+        error: errorMsg,
+        stack: errorStack,
+        articles: [] 
+      });
     }
   } else {
     res.status(405).json({ error: 'Method not allowed' });

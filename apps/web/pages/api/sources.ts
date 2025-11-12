@@ -9,8 +9,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const result = Array.isArray(sources) ? sources : [];
       res.status(200).json(result);
     } catch (error) {
-      console.error('Error fetching sources:', error);
-      res.status(500).json({ error: String(error), sources: [] });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      console.error('Error fetching sources:', errorMsg, errorStack);
+      res.status(500).json({ 
+        error: errorMsg,
+        stack: errorStack,
+        sources: [] 
+      });
     }
   } else if (req.method === 'POST') {
     try {
