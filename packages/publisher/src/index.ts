@@ -52,20 +52,46 @@ export async function publishReport(htmlContent: string, date: string): Promise<
   console.log('📋 GitHub 配置检查:');
   console.log(`  - GITHUB_TOKEN: ${config.githubToken ? '已配置 (长度: ' + config.githubToken.length + ')' : '❌ 未配置'}`);
   console.log(`  - GITHUB_REPO: ${config.githubRepo || '❌ 未配置'}`);
+  console.log(`  - GITHUB_BRANCH: ${config.githubBranch || 'main (默认)'}`);
 
   if (!config.githubToken || !config.githubRepo) {
     console.warn('⚠️  未配置 GitHub Token 或 Repo，跳过发布步骤');
     console.warn('提示：在 Vercel Dashboard 中设置环境变量：');
     console.warn('  - GITHUB_TOKEN: 你的 GitHub Personal Access Token');
     console.warn('  - GITHUB_REPO: corwen6349/daily-ai-news-blog');
+    console.warn('  - GITHUB_BRANCH: master 或 main (可选，默认 main)');
     return '';
+  }
+
+  // 先检测仓库的默认分支
+  let branch = config.githubBranch || 'main';
+  console.log(`🔍 检测仓库分支...`);
+  
+  try {
+    const repoApiUrl = `https://api.github.com/repos/${config.githubRepo}`;
+    const repoResponse = await fetch(repoApiUrl, {
+      headers: {
+        Authorization: `Bearer ${config.githubToken}`,
+        Accept: 'application/vnd.github.v3+json'
+      }
+    });
+    
+    if (repoResponse.ok) {
+      const repoData = await repoResponse.json();
+      branch = repoData.default_branch || branch;
+      console.log(`✅ 检测到默认分支: ${branch}`);
+    } else {
+      console.warn(`⚠️  无法检测默认分支，使用配置的分支: ${branch}`);
+    }
+  } catch (error) {
+    console.warn(`⚠️  分支检测失败，使用配置的分支: ${branch}`, error);
   }
 
   // Hugo 博客使用 content/posts/ 目录存放文章
   const fileName = `content/posts/${date}.md`;
   const apiUrl = `https://api.github.com/repos/${config.githubRepo}/contents/${fileName}`;
   
-  console.log(`📝 准备发布到: ${apiUrl}`);
+  console.log(`📝 准备发布到: ${apiUrl} (分支: ${branch})`);
   
   // 转换为 Hugo Markdown 格式
   const markdownContent = convertToHugoMarkdown(htmlContent, date);
@@ -104,7 +130,7 @@ export async function publishReport(htmlContent: string, date: string): Promise<
       body: JSON.stringify({
         message: `📰 Add AI Daily News for ${date}`,
         content: Buffer.from(markdownContent).toString('base64'),
-        branch: 'main',
+        branch: branch,  // 使用检测到的分支
         ...(sha && { sha })
       })
     });
@@ -118,7 +144,7 @@ export async function publishReport(htmlContent: string, date: string): Promise<
     }
 
     const result = await response.json();
-    const publishUrl = `https://github.com/${config.githubRepo}/blob/main/${fileName}`;
+    const publishUrl = `https://github.com/${config.githubRepo}/blob/${branch}/${fileName}`;
     
     console.log(`✅ 日报已成功发布到 Hugo 博客: ${fileName}`);
     console.log(`📄 GitHub 文件地址: ${publishUrl}`);
