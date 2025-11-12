@@ -1,5 +1,0 @@
-{
-  "buildCommand": "npm run build --workspace=@daily-ai-news/web",
-  "outputDirectory": ".next",
-  "installCommand": "npm install"
-}
