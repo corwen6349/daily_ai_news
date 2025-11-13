@@ -8,6 +8,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
     "nanoid": "^4.0.2",
     "rss-parser": "^3.12.0"
   },

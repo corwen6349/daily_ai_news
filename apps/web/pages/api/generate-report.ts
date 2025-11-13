@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getArticlesByIds, saveReport } from '@daily-ai-news/db';
-import { enrichArticles, buildHtmlReport } from '@daily-ai-news/processors';
+import { enrichArticles, buildHtmlReport, buildMarkdownReport } from '@daily-ai-news/processors';
 import { publishReport } from '@daily-ai-news/publisher';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -33,13 +33,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const htmlContent = await buildHtmlReport({ date: reportDate, articles: enriched });
     console.log(`✅ HTML 日报生成完成`);
 
-    // 4. 发布到 GitHub Hugo 博客
+    // 3.5 生成 Markdown 日报（用于 Hugo 博客）
+    console.log(`📝 正在生成 Markdown 日报...`);
+    const markdownContent = await buildMarkdownReport({ date: reportDate, articles: enriched });
+    console.log(`✅ Markdown 日报生成完成`);
+
+    // 4. 发布到 GitHub Hugo 博客（使用 Markdown 而不是 HTML）
     console.log(`🚀 正在发布到 Hugo 博客...`);
     let publishUrl = '';
     let publishError = '';
     
     try {
-      publishUrl = await publishReport(htmlContent, reportDate);
+      publishUrl = await publishReport(markdownContent, reportDate);
       if (publishUrl) {
         console.log(`✅ 发布完成: ${publishUrl}`);
       } else {

@@ -23,6 +23,50 @@ export async function enrichArticles(articles: Article[]): Promise<Article[]> {
   return enriched;
 }
 
+export async function buildMarkdownReport({
+  date,
+  articles
+}: {
+  date: string;
+  articles: Article[];
+}): Promise<string> {
+  const formattedDate = new Date(date).toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  let markdown = `# 🤖 每日 AI 资讯\n\n**${formattedDate}** · 共 ${articles.length} 篇精选报道\n\n---\n\n`;
+
+  articles.forEach((article, index) => {
+    markdown += `## ${index + 1}. ${article.title}\n\n`;
+    
+    // 添加原文链接
+    markdown += `🔗 **原文链接：** [${article.url}](${article.url})\n\n`;
+    
+    // 添加图片（如果有）
+    if (article.images && article.images.length > 0) {
+      article.images.slice(0, 3).forEach((img, imgIndex) => {
+        markdown += `![${article.title} - 图${imgIndex + 1}](${img})\n\n`;
+      });
+    }
+    
+    // 添加 AI 生成的报道内容
+    markdown += `${article.summary ?? article.content ?? ''}\n\n`;
+    
+    // 添加发布时间
+    if (article.published_at) {
+      markdown += `📅 **发布时间：** ${new Date(article.published_at).toLocaleDateString('zh-CN')}\n\n`;
+    }
+    
+    markdown += `---\n\n`;
+  });
+
+  markdown += `\n*✨ 由 Daily AI News Bot 自动生成*\n`;
+  
+  return markdown;
+}
+
 export async function buildHtmlReport({
   date,
   articles
