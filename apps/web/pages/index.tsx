@@ -328,34 +328,99 @@ export default function HomePage() {
             {/* 历史日报 Tab */}
             {activeTab === 'reports' && (
               <div>
-                <h2 className="text-xl font-semibold text-slate-800 mb-6">历史日报</h2>
+                <h2 className="text-xl font-semibold text-slate-800 mb-6">📚 历史日报</h2>
                 <div className="grid gap-4">
                   {reports.map(report => (
-                    <div key={report.id} className="border rounded-lg p-5 hover:shadow-md transition-shadow bg-gradient-to-r from-green-50 to-emerald-50">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="text-lg font-semibold text-slate-800 mb-1">
-                            📅 {report.date}
-                          </h3>
-                          <p className="text-sm text-slate-600">包含 {report.article_ids.length} 篇资讯</p>
+                    <div 
+                      key={report.id} 
+                      className="border rounded-lg p-6 hover:shadow-lg transition-all bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 cursor-pointer group"
+                      onClick={() => {
+                        const url = report.published_url || report.github_url;
+                        if (url) {
+                          window.open(url, '_blank');
+                        }
+                      }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="text-3xl">📰</span>
+                            <div>
+                              <h3 className="text-xl font-bold text-slate-800 group-hover:text-green-600 transition-colors">
+                                AI 日报 - {new Date(report.date).toLocaleDateString('zh-CN', { 
+                                  year: 'numeric', 
+                                  month: 'long', 
+                                  day: 'numeric' 
+                                })}
+                              </h3>
+                              <p className="text-sm text-slate-500 mt-1">
+                                创建于 {new Date(report.created_at || '').toLocaleString('zh-CN')}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-slate-600">
+                            <span className="flex items-center gap-1">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              包含 {report.article_ids?.length || 0} 篇资讯
+                            </span>
+                            
+                            {(report.published_url || report.github_url) && (
+                              <span className="flex items-center gap-1 text-green-600">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                已发布
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        {report.github_url && (
-                          <a
-                            href={report.github_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                        
+                        {(report.published_url || report.github_url) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const url = report.published_url || report.github_url;
+                              if (url) {
+                                window.open(url, '_blank');
+                              }
+                            }}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                           >
-                            📖 查看日报
-                          </a>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            查看日报
+                          </button>
                         )}
                       </div>
+                      
+                      {/* HTML 预览（可选） */}
+                      {report.html && (
+                        <div className="mt-4 pt-4 border-t border-green-200">
+                          <details className="group/details">
+                            <summary className="cursor-pointer text-sm text-slate-600 hover:text-slate-800 flex items-center gap-2">
+                              <svg className="w-4 h-4 transition-transform group-open/details:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                              预览内容
+                            </summary>
+                            <div 
+                              className="mt-3 p-4 bg-white rounded-lg text-sm text-slate-700 max-h-60 overflow-y-auto"
+                              dangerouslySetInnerHTML={{ __html: report.html.substring(0, 500) + '...' }}
+                            />
+                          </details>
+                        </div>
+                      )}
                     </div>
                   ))}
                   {reports.length === 0 && (
-                    <div className="text-center py-12 text-slate-500">
-                      <p className="text-lg">暂无历史日报</p>
-                      <p className="text-sm mt-2">生成第一份日报吧！</p>
+                    <div className="text-center py-16 text-slate-500">
+                      <div className="text-6xl mb-4">📭</div>
+                      <p className="text-xl font-semibold mb-2">暂无历史日报</p>
+                      <p className="text-sm">切换到&ldquo;资讯列表&rdquo;选择文章生成第一份日报吧！</p>
                     </div>
                   )}
                 </div>
