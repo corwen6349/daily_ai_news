@@ -1,157 +1,34 @@
-# Dependencies# Dependencies# dependencies# Dependencies
-
+# Dependencies
 node_modules/
-
-package-lock.jsonnode_modules/
-
+package-lock.json
 yarn.lock
+pnpm-lock.yaml
 
-pnpm-lock.yamlpackage-lock.jsonnode_modules/node_modules/
-
-
-
-# Build outputyarn.lock
-
+# Build output
 .next/
-
-out/pnpm-lock.yamlpnpm-lock.yaml
-
+out/
 dist/
-
 build/
-
 coverage/
 
-# Build output# build outputspackage-lock.json
-
 # Environment variables
-
-.env.next/
-
+.env
 .env.local
-
-.env.developmentout/.next/yarn.lock
-
+.env.development
 .env.production
-
-.env.testdist/
-
+.env.test
 .env.*.local
-
-build/dist/
 
 # SSH keys and credentials
-
-ccoverage/
-
+c
 c.pub
 
-build/# Environment variables
-
 # IDE
-
-.vscode/# Environment variables
-
+.vscode/
 .idea/
-
-*.swp.envcoverage/.env
-
+*.swp
 *.swo
-
-*~.env.local
-
-
-
-# Logs.env.development.env.local
-
-*.log
-
-npm-debug.log*.env.production
-
-yarn-debug.log*
-
-yarn-error.log*.env.test# environment.env.development
-
-pnpm-debug.log*
-
-.env.*.local
-
-# OS
-
-.DS_Store.env.env.production
-
-Thumbs.db
-
-# IDE
-
-# Testing
-
-coverage/.vscode/.env.local.env.*.local
-
-.nyc_output/
-
-.idea/
-
-# Misc
-
-.turbo/*.swp.env.production
-
-
-
-# Scripts with credentials*.swo
-
-push.ps1
-
-push-to-github.sh*~.env.test# IDE
-
-dev.bat
-
-
-
-# Logs.vscode/
-
-*.log
-
-npm-debug.log*# logs.idea/
-
-yarn-debug.log*
-
-yarn-error.log*npm-debug.log**.swp
-
-pnpm-debug.log*
-
-yarn-debug.log**.swo
-
-# OS
-
-.DS_Storeyarn-error.log**~
-
-Thumbs.db
-
-pnpm-debug.log*.DS_Store
-
-# Testing
-
-.nyc_output/
-
-
-
-# Misc# misc# Build output
-
-.turbo/
-
-.DS_Store.next/
-
-# Scripts with credentials
-
-push.ps1.idea/out/
-
-push-to-github.sh
-
-dev.bat*.logdist/
-
-
-build/
+*~
 
 # Logs
 *.log
@@ -161,8 +38,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 # OS
-Thumbs.db
 .DS_Store
+Thumbs.db
 
 # Testing
 coverage/
@@ -175,4 +52,3 @@ coverage/
 push.ps1
 push-to-github.sh
 dev.bat
-node_modules
