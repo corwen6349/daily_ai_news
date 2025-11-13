@@ -22,18 +22,39 @@ export async function summarizeWithGemini(input: SummaryInput): Promise<string> 
     'gemini-1.5-pro'               // 高级版本
   ];
 
-  const prompt = `请用中文总结以下AI资讯文章，生成专业的新闻摘要：
+  const prompt = `请将以下 AI 资讯改写成一篇专业的科技报道（200-300字）：
 
-标题：${input.title}
+**标题：** ${input.title}
 
-内容：${input.content.substring(0, 3000)}
+**原文链接：** ${input.url}
 
-要求：
-1. 用3-5句话概括核心内容和技术亮点
-2. 突出实际应用价值和创新之处
-3. 语言简洁专业，适合技术日报阅读
-4. 控制在150-250字之间
-5. 直接返回摘要内容，不要前缀说明`;
+**内容：**
+${input.content.substring(0, 2000)}
+
+**写作要求：**
+1. **开头**：一句话概括核心要点（What happened / What's new）
+2. **主体**：
+   - 详细说明技术细节、产品特点或研究成果
+   - 用具体数据或例子支撑（如：性能提升 X%、支持 Y 功能）
+   - 分析对行业/用户的实际影响
+3. **格式**：
+   - 使用 Markdown，关键词加粗（**关键词**）
+   - 如果内容涉及图片/视频/Demo，用 📊 🎬 🖼️ 等 emoji 标注
+   - 段落简洁（每段 2-3 句）
+4. **结尾**：必须添加 "📎 [查看原文](${input.url})"
+
+示例结构：
+---
+**OpenAI 发布 GPT-5**，性能相比 GPT-4 提升 40%，推理速度快 2 倍。
+
+新模型支持 **128K 上下文长度**，可处理约 100 页文档。测试显示在数学推理、代码生成等任务上表现更优，特别是复杂问题分解能力显著增强。📊
+
+这将显著降低企业 AI 应用成本，加速多模态 AI 落地。OpenAI 计划于 12 月向 API 用户开放。
+
+📎 [查看原文](https://example.com)
+---
+
+直接输出报道内容，不要标题或额外说明。`;
 
   let lastError: Error | null = null;
 
@@ -63,7 +84,7 @@ export async function summarizeWithGemini(input: SummaryInput): Promise<string> 
           }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 500,
+            maxOutputTokens: 800,
             topP: 0.95,
             topK: 40
           },

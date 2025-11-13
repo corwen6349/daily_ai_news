@@ -13,6 +13,8 @@ export interface Article {
   url: string;
   summary?: string;
   content?: string;
+  images?: string[];  // 图片 URL 数组
+  videos?: string[];  // 视频 URL 数组
   published_at?: string;
   created_at?: string;
 }

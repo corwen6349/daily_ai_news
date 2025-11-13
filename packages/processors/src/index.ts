@@ -9,7 +9,9 @@ export async function enrichArticles(articles: Article[]): Promise<Article[]> {
       const summary = await summarize({
         title: article.title,
         content: article.content ?? article.summary ?? '',
-        url: article.url
+        url: article.url,
+        images: article.images,
+        videos: article.videos
       });
       enriched.push({ ...article, summary });
     } catch (error) {
@@ -34,15 +36,32 @@ export async function buildHtmlReport({
     day: '2-digit'
   });
 
+  // 将 Markdown 格式的摘要转换为 HTML（简单实现）
+  const markdownToHtml = (text: string): string => {
+    return text
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // 粗体
+      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" style="color: #0ea5e9; text-decoration: none;">$1</a>') // 链接
+      .replace(/\n\n/g, '</p><p style="color: #cbd5e1; line-height: 1.8; margin: 12px 0;">') // 段落
+      .replace(/\n/g, '<br>'); // 换行
+  };
+
   const items = articles
     .map(
       (article, index) => `
-        <article style="margin-bottom: 24px;">
-          <h2 style="font-size: 20px; margin-bottom: 8px;">
-            ${index + 1}. <a href="${article.url}" style="color: #0ea5e9; text-decoration: none;">${article.title}</a>
+        <article style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1e293b;">
+          <h2 style="font-size: 20px; margin-bottom: 12px; color: #f1f5f9;">
+            ${index + 1}. <a href="${article.url}" style="color: #38bdf8; text-decoration: none; transition: color 0.2s;" 
+               onmouseover="this.style.color='#0ea5e9'" 
+               onmouseout="this.style.color='#38bdf8'">${article.title}</a>
           </h2>
-          <p style="color: #64748b; line-height: 1.6;">${article.summary ?? article.content ?? ''}</p>
-          <p style="font-size: 12px; color: #94a3b8;">发布时间：${article.published_at ?? '未知'}</p>
+          <div style="color: #cbd5e1; line-height: 1.8; margin: 12px 0;">
+            <p style="margin: 12px 0;">
+              ${markdownToHtml(article.summary ?? article.content ?? '')}
+            </p>
+          </div>
+          <p style="font-size: 13px; color: #64748b; margin-top: 8px;">
+            📅 ${article.published_at ? new Date(article.published_at).toLocaleDateString('zh-CN') : '未知'}
+          </p>
         </article>
       `
     )
@@ -54,16 +73,69 @@ export async function buildHtmlReport({
     <meta charset="UTF-8" />
     <title>AI 日报 - ${formattedDate}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * { box-sizing: border-box; }
+      body { 
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #e2e8f0; 
+        padding: 32px 16px;
+        margin: 0;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+      header {
+        margin-bottom: 32px;
+        border-bottom: 2px solid #38bdf8;
+        padding-bottom: 16px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 32px;
+        background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .subtitle {
+        margin: 8px 0 0;
+        color: #94a3b8;
+        font-size: 14px;
+      }
+      a { transition: all 0.2s ease; }
+      a:hover { opacity: 0.8; }
+      strong { color: #38bdf8; font-weight: 600; }
+      footer {
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid #1e293b;
+        font-size: 13px;
+        color: #64748b;
+        text-align: center;
+      }
+    </style>
   </head>
-  <body style="font-family: 'Helvetica Neue', Arial, sans-serif; background: #0f172a; color: #e2e8f0; padding: 32px;">
-    <header style="margin-bottom: 32px;">
-      <h1 style="margin: 0; font-size: 32px; color: #38bdf8;">每日 AI 日报</h1>
-      <p style="margin: 8px 0 0; color: #94a3b8;">${formattedDate}</p>
-    </header>
-    <main>
-      ${items}
-    </main>
-    <footer style="margin-top: 48px; font-size: 12px; color: #475569;">Made with ❤️ by Daily AI News Bot</footer>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🤖 每日 AI 资讯</h1>
+        <p class="subtitle">${formattedDate} · 共 ${articles.length} 篇精选报道</p>
+      </header>
+      <main>
+        ${items}
+      </main>
+      <footer>
+        <p>✨ 由 Daily AI News Bot 自动生成 · 基于 DeepSeek/Gemini AI</p>
+      </footer>
+    </div>
   </body>
 </html>`;
 }
