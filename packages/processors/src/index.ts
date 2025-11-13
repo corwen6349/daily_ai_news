@@ -36,33 +36,68 @@ export async function buildMarkdownReport({
     day: 'numeric'
   });
 
-  let markdown = `# 🤖 每日 AI 资讯\n\n**${formattedDate}** · 共 ${articles.length} 篇精选报道\n\n---\n\n`;
+  // 生成摘要（提取所有文章的核心关键词）
+  const keywords = articles
+    .map(a => a.title)
+    .join('、')
+    .substring(0, 150);
 
+  // 大标题和日报摘要
+  let markdown = `# ${formattedDate} AI 资讯日报\n\n`;
+  markdown += `> 📅 **${formattedDate}** | 📊 **共 ${articles.length} 篇精选报道**\n\n`;
+  markdown += `## 📋 今日摘要\n\n`;
+  markdown += `今日AI资讯涵盖：${keywords}${keywords.length >= 150 ? '...' : ''}等领域的最新动态。`;
+  markdown += `本期日报精选了 ${articles.length} 篇重要资讯，为您带来AI领域的前沿进展和深度分析。\n\n`;
+  markdown += `---\n\n`;
+
+  // 目录
+  markdown += `## 📑 目录\n\n`;
   articles.forEach((article, index) => {
-    markdown += `## ${index + 1}. ${article.title}\n\n`;
+    markdown += `${index + 1}. [${article.title}](#${index + 1}-${encodeURIComponent(article.title.replace(/[\\s\\?\\!\\,\\.]/g, '-').toLowerCase())})\n`;
+  });
+  markdown += `\n---\n\n`;
+
+  // 正文内容
+  markdown += `## 📰 详细内容\n\n`;
+  
+  articles.forEach((article, index) => {
+    // 小标题（使用 ### 三级标题）
+    markdown += `### ${index + 1}. ${article.title}\n\n`;
     
-    // 添加原文链接
-    markdown += `🔗 **原文链接：** [${article.url}](${article.url})\n\n`;
+    // 元信息
+    markdown += `> 🔗 **原文链接：** [点击访问](${article.url})\n`;
+    if (article.published_at) {
+      const pubDate = new Date(article.published_at).toLocaleDateString('zh-CN');
+      markdown += `> 📅 **发布时间：** ${pubDate}\n`;
+    }
+    markdown += `\n`;
     
-    // 添加图片（如果有）
+    // 文章配图（如果有）
     if (article.images && article.images.length > 0) {
+      markdown += `#### 📸 相关图片\n\n`;
       article.images.slice(0, 3).forEach((img, imgIndex) => {
-        markdown += `![${article.title} - 图${imgIndex + 1}](${img})\n\n`;
+        markdown += `![配图${imgIndex + 1}](${img})\n\n`;
       });
     }
     
-    // 添加 AI 生成的报道内容
-    markdown += `${article.summary ?? article.content ?? ''}\n\n`;
+    // AI 生成的报道内容
+    markdown += `#### 📝 内容概要\n\n`;
+    markdown += `${article.summary ?? article.content ?? '暂无内容'}\n\n`;
     
-    // 添加发布时间
-    if (article.published_at) {
-      markdown += `📅 **发布时间：** ${new Date(article.published_at).toLocaleDateString('zh-CN')}\n\n`;
+    // 分隔线
+    if (index < articles.length - 1) {
+      markdown += `---\n\n`;
     }
-    
-    markdown += `---\n\n`;
   });
 
-  markdown += `\n*✨ 由 Daily AI News Bot 自动生成*\n`;
+  // 页脚
+  markdown += `\n---\n\n`;
+  markdown += `## 💡 关于本日报\n\n`;
+  markdown += `本日报由 **Daily AI News Bot** 自动生成，基于 DeepSeek/Gemini AI 技术。\n\n`;
+  markdown += `- 🤖 AI 驱动的智能摘要\n`;
+  markdown += `- 📊 每日精选优质资讯\n`;
+  markdown += `- 🔄 自动化采集与生成\n\n`;
+  markdown += `*生成时间：${new Date().toLocaleString('zh-CN')}*\n`;
   
   return markdown;
 }
