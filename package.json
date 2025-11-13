@@ -1,7 +1,7 @@
 {
   "name": "daily-ai-news",
   "version": "1.0.0",
-  "description": "�Զ��� AI ���žۺ����ձ�����ƽ̨",
+  "description": "自动化 AI 资讯聚合与日报生成平台",
   "private": true,
   "packageManager": "npm@9.0.0",
   "scripts": {

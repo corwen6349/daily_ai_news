@@ -14,7 +14,7 @@ declare global {
   var __dailyAiNewsStore: MemoryStore | undefined;
 }
 
-// 辅助函数：处�?Supabase 错误，避免循环引�?
+// 辅助函数：处理 Supabase 错误，避免循环引用
 function handleSupabaseError(error: any, context: string): Error {
   const errorInfo = {
     message: error.message || 'Unknown error',
@@ -167,7 +167,7 @@ export async function listArticles({
       throw handleSupabaseError(error, 'listArticles');
     }
     
-    // 将数据库字段映射到代码字�?
+    // 将数据库字段映射到代码字段
     return (data ?? []).map((item: any) => ({
       id: item.id,
       source_id: item.source_id,
