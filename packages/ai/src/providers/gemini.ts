@@ -45,12 +45,17 @@ export async function summarizeWithGemini(input: SummaryInput): Promise<string> 
       
       console.log(`🔄 尝试 Gemini 模型: ${model}`);
       
-      const response = await fetch(`${endpoint}?key=${geminiApiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000); // 30秒超时
+      
+      try {
+        const response = await fetch(`${endpoint}?key=${geminiApiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
           contents: [{
             parts: [{
               text: prompt
@@ -82,6 +87,8 @@ export async function summarizeWithGemini(input: SummaryInput): Promise<string> 
           ]
         })
       });
+      
+      clearTimeout(timeout);
 
       const responseText = await response.text();
 
@@ -120,9 +127,16 @@ export async function summarizeWithGemini(input: SummaryInput): Promise<string> 
       console.log(`✅ Gemini (${model}) 总结成功: ${summary.substring(0, 50)}...`);
       return summary.trim();
 
+      } catch (fetchError) {
+        clearTimeout(timeout);
+        const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+        console.error(`❌ ${model} 调用异常:`, errorMsg);
+        lastError = fetchError as Error;
+        continue;
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`❌ ${model} 调用异常:`, errorMsg);
+      console.error(`❌ ${model} 处理异常:`, errorMsg);
       lastError = error as Error;
       continue;
     }
