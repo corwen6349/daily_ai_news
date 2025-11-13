@@ -15,7 +15,8 @@ export async function summarizeWithGemini(input: SummaryInput): Promise<string> 
 
   // 官方推荐的最新模型列表（按优先级）
   const models = [
-    'gemini-2.0-flash-exp',        // 最新实验版（推荐）
+    'gemini-2.5-flash',            // 最新、最快的模型 (2025-11)
+    'gemini-2.0-flash-exp',        // 实验版
     'gemini-1.5-flash',            // 稳定版
     'gemini-1.5-flash-latest',     // 最新稳定版
     'gemini-1.5-pro'               // 高级版本

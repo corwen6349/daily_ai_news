@@ -8,21 +8,23 @@
 
 系统会按优先级自动尝试以下模型：
 
-1. **gemini-2.0-flash-exp** ⭐ - 最新实验版（推荐）
-   - 最快速度
-   - 最新功能
-   - 适合日常使用
+1. **gemini-2.5-flash** ⭐ - 最新、最快的模型 (2025-11)
+   - 官方首推，性价比极高
+   - 适合大规模、低延迟任务
 
-2. **gemini-1.5-flash** - 稳定版
+2. **gemini-2.0-flash-exp** - 实验版
+   - 包含最新功能
+   - 速度快
+
+3. **gemini-1.5-flash** - 稳定版
    - 经过充分测试
-   - 性能可靠
    - 生产环境推荐
 
-3. **gemini-1.5-flash-latest** - 最新稳定版
+4. **gemini-1.5-flash-latest** - 最新稳定版
    - 持续更新
    - 平衡性能和稳定性
 
-4. **gemini-1.5-pro** - 高级版本
+5. **gemini-1.5-pro** - 高级版本
    - 更强推理能力
    - 适合复杂任务
    - 成本较高
@@ -30,17 +32,17 @@
 ## 🔧 修复内容
 
 ### 1. 使用官方推荐的模型
-- 主要使用 **gemini-2.0-flash-exp**（最新实验版），并自动降级到 gemini-1.5 系列稳定版本。
+- 主要使用 **gemini-2.5-flash**（最新、最快的模型），并自动降级到其他稳定版本。
 - 完全符合官方 REST API 规范。
 
 ### 2. 多模型自动切换
-- 按优先级尝试 4 个不同的 Gemini 模型，确保最佳性能和可用性：
-  `gemini-2.0-flash-exp` → `gemini-1.5-flash` → `gemini-1.5-flash-latest` → `gemini-1.5-pro`
+- 按优先级尝试 5 个不同的 Gemini 模型，确保最佳性能和可用性：
+  `gemini-2.5-flash` → `gemini-2.0-flash-exp` → `gemini-1.5-flash` → `gemini-1.5-flash-latest` → `gemini-1.5-pro`
 
 ### 3. 三层降级策略
 - 即使在极端情况下，也能保证服务不中断：
   ```
-  Gemini API (4个模型自动切换)
+   Gemini API (5个模型自动切换)
        ↓ 失败
   DeepSeek API (如果配置)
        ↓ 失败

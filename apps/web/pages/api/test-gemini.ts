@@ -24,9 +24,14 @@ export default async function handler(
   // 官方推荐的最新模型列表
   const endpoints = [
     {
+      name: 'gemini-2.5-flash',
+      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+      description: '最新、最快的模型 (2025-11)'
+    },
+    {
       name: 'gemini-2.0-flash-exp',
       url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`,
-      description: '最新实验版（推荐）'
+      description: '实验版'
     },
     {
       name: 'gemini-1.5-flash',
