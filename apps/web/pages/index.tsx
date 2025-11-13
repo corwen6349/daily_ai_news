@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react';
+import * as React from 'react';
 import useSWR from 'swr';
 import { Source, Article, Report } from '@daily-ai-news/db';
 
@@ -56,6 +57,27 @@ export default function HomePage() {
   const articles = articlesData?.articles || [];
   const groupedByDate = articlesData?.groupedByDate || {};
   const pagination = articlesData?.pagination || { page: 1, pageSize: 50, hasMore: false };
+
+  // 处理历史日报：同一日期只保留最新一条，按日期倒序
+  const processedReports = React.useMemo(() => {
+    const reportsByDate = new Map<string, Report>();
+    
+    // 按创建时间排序（最新的在前），同一日期只保留第一条
+    const sortedReports = [...reports].sort((a, b) => 
+      new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    );
+    
+    sortedReports.forEach(report => {
+      if (!reportsByDate.has(report.date)) {
+        reportsByDate.set(report.date, report);
+      }
+    });
+    
+    // 按日期倒序排列
+    return Array.from(reportsByDate.values()).sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, [reports]);
 
   const handleFetchNews = async () => {
     setLoading(true);
@@ -401,16 +423,10 @@ export default function HomePage() {
               <div>
                 <h2 className="text-xl font-semibold text-slate-800 mb-6">📚 历史日报</h2>
                 <div className="grid gap-4">
-                  {reports.map(report => (
+                  {processedReports.map(report => (
                     <div 
                       key={report.id} 
-                      className="border rounded-lg p-6 hover:shadow-lg transition-all bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 cursor-pointer group"
-                      onClick={() => {
-                        const url = report.published_url || report.github_url;
-                        if (url) {
-                          window.open(url, '_blank');
-                        }
-                      }}
+                      className="border rounded-lg p-6 hover:shadow-lg transition-all bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 group"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -471,8 +487,8 @@ export default function HomePage() {
                       {/* HTML 预览（可选） */}
                       {report.html && (
                         <div className="mt-4 pt-4 border-t border-green-200">
-                          <details className="group/details">
-                            <summary className="cursor-pointer text-sm text-slate-600 hover:text-slate-800 flex items-center gap-2">
+                          <details className="group/details" onClick={(e) => e.stopPropagation()}>
+                            <summary className="cursor-pointer text-sm text-slate-600 hover:text-slate-800 flex items-center gap-2 select-none">
                               <svg className="w-4 h-4 transition-transform group-open/details:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
@@ -487,7 +503,7 @@ export default function HomePage() {
                       )}
                     </div>
                   ))}
-                  {reports.length === 0 && (
+                  {processedReports.length === 0 && (
                     <div className="text-center py-16 text-slate-500">
                       <div className="text-6xl mb-4">📭</div>
                       <p className="text-xl font-semibold mb-2">暂无历史日报</p>
