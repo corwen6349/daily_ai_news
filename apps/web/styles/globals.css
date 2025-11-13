@@ -6,6 +6,18 @@
   box-sizing: border-box;
 }
 
+/* 移除所有元素的焦点轮廓 */
+*:focus,
+*:focus-visible {
+  outline: none !important;
+}
+
+/* 移除 details 和 summary 元素的焦点轮廓 */
+details:focus,
+summary:focus {
+  outline: none !important;
+}
+
 html,
 body {
   padding: 0;
