@@ -50,7 +50,16 @@ export default async function handler(
     }
   ];
 
-  const results: any[] = [];
+  interface TestResult {
+    endpoint: string;
+    description: string;
+    status?: number;
+    success: boolean;
+    summary?: string;
+    error?: string;
+  }
+
+  const results: TestResult[] = [];
 
   for (const endpoint of endpoints) {
     try {
