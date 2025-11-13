@@ -426,7 +426,7 @@ export default function HomePage() {
                   {processedReports.map(report => (
                     <div 
                       key={report.id} 
-                      className="border rounded-lg p-6 hover:shadow-lg transition-all bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 group"
+                      className="rounded-lg p-6 shadow-md hover:shadow-xl transition-all bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 group"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
