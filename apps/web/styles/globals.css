@@ -6,16 +6,25 @@
   box-sizing: border-box;
 }
 
-/* 移除所有元素的焦点轮廓 */
-*:focus,
-*:focus-visible {
+/* 移除 details 和 summary 元素的默认焦点轮廓 */
+details {
   outline: none !important;
 }
 
-/* 移除 details 和 summary 元素的焦点轮廓 */
-details:focus,
+details:focus {
+  outline: none !important;
+}
+
+summary {
+  outline: none !important;
+}
+
 summary:focus {
   outline: none !important;
+}
+
+summary::-webkit-details-marker {
+  display: none;
 }
 
 html,
