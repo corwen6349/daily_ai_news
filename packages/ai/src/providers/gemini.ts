@@ -32,6 +32,7 @@ export async function summarizeWithGemini(input: SummaryInput): Promise<string> 
 ${input.content.substring(0, 2000)}
 
 **写作要求：**
+0. **重要：如果以上内容是英文，必须先将其翻译成中文，再按下面要求改写**
 1. **开头**：一句话概括核心要点（What happened / What's new）
 2. **主体**：
    - 详细说明技术细节、产品特点或研究成果
