@@ -1,56 +1,110 @@
-# Dependencies# dependencies# Dependencies
+# Dependencies# Dependencies# dependencies# Dependencies
 
 node_modules/
 
-package-lock.jsonnode_modules/node_modules/
+package-lock.jsonnode_modules/
 
 yarn.lock
 
-pnpm-lock.yamlpnpm-lock.yaml
+pnpm-lock.yamlpackage-lock.jsonnode_modules/node_modules/
 
 
 
-# Build output# build outputspackage-lock.json
+# Build outputyarn.lock
 
 .next/
 
-out/.next/yarn.lock
+out/pnpm-lock.yamlpnpm-lock.yaml
 
 dist/
 
-build/dist/
+build/
 
 coverage/
 
-build/# Environment variables
+# Build output# build outputspackage-lock.json
 
 # Environment variables
 
-.envcoverage/.env
+.env.next/
 
 .env.local
 
-.env.development.env.local
+.env.developmentout/.next/yarn.lock
 
 .env.production
 
-.env.test# environment.env.development
+.env.testdist/
 
 .env.*.local
 
-.env.env.production
+build/dist/
+
+# SSH keys and credentials
+
+ccoverage/
+
+c.pub
+
+build/# Environment variables
 
 # IDE
 
-.vscode/.env.local.env.*.local
+.vscode/# Environment variables
 
 .idea/
 
-*.swp.env.production
+*.swp.envcoverage/.env
 
 *.swo
 
-*~.env.test# IDE
+*~.env.local
+
+
+
+# Logs.env.development.env.local
+
+*.log
+
+npm-debug.log*.env.production
+
+yarn-debug.log*
+
+yarn-error.log*.env.test# environment.env.development
+
+pnpm-debug.log*
+
+.env.*.local
+
+# OS
+
+.DS_Store.env.env.production
+
+Thumbs.db
+
+# IDE
+
+# Testing
+
+coverage/.vscode/.env.local.env.*.local
+
+.nyc_output/
+
+.idea/
+
+# Misc
+
+.turbo/*.swp.env.production
+
+
+
+# Scripts with credentials*.swo
+
+push.ps1
+
+push-to-github.sh*~.env.test# IDE
+
+dev.bat
 
 
 
