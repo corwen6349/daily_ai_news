@@ -25,16 +25,37 @@ const fetcher = (url: string) => fetch(url).then(async res => {
   return [];
 });
 
+interface ArticlesResponse {
+  articles: Article[];
+  groupedByDate: Record<string, Article[]>;
+  pagination: {
+    page: number;
+    pageSize: number;
+    hasMore: boolean;
+  };
+}
+
+const articlesFetcher = (url: string) => fetch(url).then(res => res.json());
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'sources' | 'articles' | 'reports'>('sources');
   const [loading, setLoading] = useState(false);
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
   const [editingSource, setEditingSource] = useState<Source | null>(null);
   const [showSourceModal, setShowSourceModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(50);
   
   const { data: sources = [], mutate: mutateSources } = useSWR<Source[]>('/api/sources', fetcher);
-  const { data: articles = [], mutate: mutateArticles } = useSWR<Article[]>('/api/articles', fetcher);
+  const { data: articlesData, mutate: mutateArticles } = useSWR<ArticlesResponse>(
+    `/api/articles?page=${currentPage}&pageSize=${pageSize}`,
+    articlesFetcher
+  );
   const { data: reports = [] } = useSWR<Report[]>('/api/reports', fetcher);
+  
+  const articles = articlesData?.articles || [];
+  const groupedByDate = articlesData?.groupedByDate || {};
+  const pagination = articlesData?.pagination || { page: 1, pageSize: 50, hasMore: false };
 
   const handleFetchNews = async () => {
     setLoading(true);
@@ -251,7 +272,7 @@ export default function HomePage() {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold text-slate-800">
-                    今日资讯 {selectedArticles.size > 0 && `(已选 ${selectedArticles.size} 篇)`}
+                    资讯列表 {selectedArticles.size > 0 && `(已选 ${selectedArticles.size} 篇)`}
                   </h2>
                   {selectedArticles.size > 0 && (
                     <div className="flex gap-3">
@@ -272,56 +293,106 @@ export default function HomePage() {
                   )}
                 </div>
 
-                <div className="space-y-4">
-                  {articles.filter(article => article.id).map(article => (
-                    <div 
-                      key={article.id}
-                      className={`border rounded-lg p-5 transition-all cursor-pointer ${
-                        selectedArticles.has(article.id!)
-                          ? 'bg-blue-50 border-blue-300 shadow-md'
-                          : 'bg-white hover:shadow-md'
-                      }`}
-                      onClick={() => toggleArticleSelection(article.id!)}
-                    >
-                      <div className="flex items-start gap-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedArticles.has(article.id!)}
-                          onChange={() => toggleArticleSelection(article.id!)}
-                          className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                        />
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-slate-800 mb-2">
-                            <a 
-                              href={article.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="hover:text-blue-600 transition-colors"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {article.title}
-                            </a>
-                          </h3>
-                          {article.summary && (
-                            <p className="text-slate-600 text-sm leading-relaxed mb-3">
-                              {article.summary}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-4 text-xs text-slate-500">
-                            <span>📅 {new Date(article.published_at || '').toLocaleDateString('zh-CN')}</span>
-                            <span>🔗 来源: {sources.find(s => s.id === article.source_id)?.name || '未知'}</span>
+                {/* 按日期分组显示 */}
+                <div className="space-y-8">
+                  {Object.entries(groupedByDate)
+                    .sort(([dateA], [dateB]) => {
+                      // 按日期降序排列（最新的在前）
+                      if (dateA === '未知日期') return 1;
+                      if (dateB === '未知日期') return -1;
+                      return new Date(dateB).getTime() - new Date(dateA).getTime();
+                    })
+                    .map(([date, dateArticles]) => (
+                    <div key={date} className="space-y-4">
+                      {/* 日期标题 */}
+                      <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-5 py-3 rounded-lg shadow-md flex items-center justify-between">
+                        <h3 className="text-lg font-bold flex items-center gap-2">
+                          <span>📅</span>
+                          <span>{date}</span>
+                        </h3>
+                        <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                          {dateArticles.length} 篇
+                        </span>
+                      </div>
+                      
+                      {/* 该日期下的文章列表 */}
+                      <div className="space-y-3 pl-4">
+                        {dateArticles.filter(article => article.id).map(article => (
+                          <div 
+                            key={article.id}
+                            className={`border rounded-lg p-4 transition-all cursor-pointer ${
+                              selectedArticles.has(article.id!)
+                                ? 'bg-blue-50 border-blue-300 shadow-md'
+                                : 'bg-white hover:shadow-md hover:border-blue-200'
+                            }`}
+                            onClick={() => toggleArticleSelection(article.id!)}
+                          >
+                            <div className="flex items-start gap-3">
+                              <input
+                                type="checkbox"
+                                checked={selectedArticles.has(article.id!)}
+                                onChange={() => toggleArticleSelection(article.id!)}
+                                className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-base font-semibold text-slate-800 mb-2 leading-snug">
+                                  <a 
+                                    href={article.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="hover:text-blue-600 transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {article.title}
+                                  </a>
+                                </h4>
+                                {article.summary && (
+                                  <p className="text-slate-600 text-sm leading-relaxed mb-2 line-clamp-2">
+                                    {article.summary}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-3 text-xs text-slate-500">
+                                  <span>🔗 {sources.find(s => s.id === article.source_id)?.name || '未知来源'}</span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        ))}
                       </div>
                     </div>
                   ))}
+                  
                   {articles.length === 0 && (
-                    <div className="text-center py-12 text-slate-500">
-                      <p className="text-lg">暂无资讯</p>
-                      <p className="text-sm mt-2">点击上方&ldquo;抓取资讯&rdquo;按钮获取最新内容</p>
+                    <div className="text-center py-16 text-slate-500">
+                      <div className="text-6xl mb-4">📭</div>
+                      <p className="text-xl font-semibold mb-2">暂无资讯</p>
+                      <p className="text-sm">点击上方&ldquo;抓取资讯&rdquo;按钮获取最新内容</p>
                     </div>
                   )}
                 </div>
+
+                {/* 分页控制 */}
+                {articles.length > 0 && (
+                  <div className="mt-8 flex items-center justify-center gap-4">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← 上一页
+                    </button>
+                    <span className="text-slate-600 font-medium">
+                      第 {pagination.page} 页
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => p + 1)}
+                      disabled={!pagination.hasMore}
+                      className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      下一页 →
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
