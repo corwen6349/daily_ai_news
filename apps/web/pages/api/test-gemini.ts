@@ -21,19 +21,27 @@ export default async function handler(
   // 测试文本
   const testContent = req.body?.content || '人工智能（AI）正在改变世界，包括自然语言处理、计算机视觉和机器学习等多个领域都在快速发展。';
 
-  // 尝试多个 API 端点
+  // 官方推荐的最新模型列表
   const endpoints = [
     {
-      name: 'v1/gemini-1.5-flash',
-      url: `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`
+      name: 'gemini-2.0-flash-exp',
+      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`,
+      description: '最新实验版（推荐）'
     },
     {
-      name: 'v1beta/gemini-1.5-flash-latest',
-      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`
+      name: 'gemini-1.5-flash',
+      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      description: '稳定版'
     },
     {
-      name: 'v1beta/gemini-pro',
-      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`
+      name: 'gemini-1.5-flash-latest',
+      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`,
+      description: '最新稳定版'
+    },
+    {
+      name: 'gemini-1.5-pro',
+      url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`,
+      description: '高级版本'
     }
   ];
 
@@ -41,7 +49,7 @@ export default async function handler(
 
   for (const endpoint of endpoints) {
     try {
-      console.log(`测试端点: ${endpoint.name}`);
+      console.log(`测试端点: ${endpoint.name} - ${endpoint.description}`);
       
       const response = await fetch(endpoint.url, {
         method: 'POST',
@@ -53,7 +61,11 @@ export default async function handler(
             parts: [{
               text: `请用一句话总结：${testContent}`
             }]
-          }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 200
+          }
         })
       });
 
@@ -65,6 +77,7 @@ export default async function handler(
         
         results.push({
           endpoint: endpoint.name,
+          description: endpoint.description,
           status: response.status,
           success: true,
           summary: summary || '(无返回内容)'
@@ -72,6 +85,7 @@ export default async function handler(
       } else {
         results.push({
           endpoint: endpoint.name,
+          description: endpoint.description,
           status: response.status,
           success: false,
           error: responseText.substring(0, 500)
@@ -80,6 +94,7 @@ export default async function handler(
     } catch (error) {
       results.push({
         endpoint: endpoint.name,
+        description: endpoint.description,
         success: false,
         error: error instanceof Error ? error.message : String(error)
       });

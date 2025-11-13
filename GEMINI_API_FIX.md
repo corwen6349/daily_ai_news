@@ -1,26 +1,55 @@
-# Gemini API 404 错误修复指南
+# Gemini API 集成指南
+
+## 🆕 已更新到官方推荐方式
+
+根据 [Google AI Studio 官方文档](https://ai.google.dev/gemini-api/docs/quickstart?hl=zh-cn)，已使用最新的 Gemini API 规范。
+
+## 🎯 支持的模型
+
+系统会按优先级自动尝试以下模型：
+
+1. **gemini-2.0-flash-exp** ⭐ - 最新实验版（推荐）
+   - 最快速度
+   - 最新功能
+   - 适合日常使用
+
+2. **gemini-1.5-flash** - 稳定版
+   - 经过充分测试
+   - 性能可靠
+   - 生产环境推荐
+
+3. **gemini-1.5-flash-latest** - 最新稳定版
+   - 持续更新
+   - 平衡性能和稳定性
+
+4. **gemini-1.5-pro** - 高级版本
+   - 更强推理能力
+   - 适合复杂任务
+   - 成本较高
 
 ## 🔧 修复内容
 
-### 1. 多端点支持
-现在系统会自动尝试多个 Gemini API 端点：
-- `v1/models/gemini-1.5-flash`
-- `v1beta/models/gemini-1.5-flash-latest`
-- `v1beta/models/gemini-pro`
+### 1. 使用官方推荐的模型
+- 主要使用 **gemini-2.0-flash-exp**（最新实验版），并自动降级到 gemini-1.5 系列稳定版本。
+- 完全符合官方 REST API 规范。
 
-### 2. 增强的降级策略
-```
-Gemini API (多端点)
-    ↓ 失败
-DeepSeek API
-    ↓ 失败
-智能文本截取（提取前几句话）
-```
+### 2. 多模型自动切换
+- 按优先级尝试 4 个不同的 Gemini 模型，确保最佳性能和可用性：
+  `gemini-2.0-flash-exp` → `gemini-1.5-flash` → `gemini-1.5-flash-latest` → `gemini-1.5-pro`
 
-### 3. 详细日志
-- 显示正在尝试的 API 端点
-- 记录响应状态和错误信息
-- 帮助快速定位问题
+### 3. 三层降级策略
+- 即使在极端情况下，也能保证服务不中断：
+  ```
+  Gemini API (4个模型自动切换)
+       ↓ 失败
+  DeepSeek API (如果配置)
+       ↓ 失败
+  智能文本截取 (提取原文摘要)
+  ```
+
+### 4. 增强的错误处理和日志
+- **详细日志**：记录每次 API 调用的模型、状态和错误信息，方便快速排查。
+- **智能错误处理**：能识别并处理安全阻止、空返回等多种异常情况。
 
 ## 🧪 测试 API 配置
 
