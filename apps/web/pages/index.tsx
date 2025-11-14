@@ -496,6 +496,7 @@ export default function HomePage() {
                           </div>
                         </div>
                       </div>
+                    </div>
                     );
                   })}
                   {processedReports.length === 0 && (
