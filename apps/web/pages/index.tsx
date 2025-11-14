@@ -286,12 +286,10 @@ export default function HomePage() {
                           >
                             🗑️ 删除
                           </button>
-                        ))}
+                        </div>
                       </div>
-                      )}
                     </div>
-                    );
-                  })}
+                  ))}
                 </div>
               </div>
             )}
