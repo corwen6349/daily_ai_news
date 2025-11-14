@@ -31,19 +31,15 @@ export async function buildMarkdownReport({
   articles: Article[];
 }): Promise<string> {
   const dateObj = new Date(date);
-  const formattedDate = dateObj.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
   
   // Hugo front matter 格式的日期
   const hugoDate = dateObj.toISOString();
   const shortDate = date; // YYYY-MM-DD 格式
+  const displayDate = date.replace(/-/g, '/'); // YYYY/MM/DD 格式
 
   // Front Matter (Hugo 博客格式)
   let markdown = `---\n`;
-  markdown += `title: "🤖 每日 AI 资讯 - ${date.replace(/-/g, '/')}"\n`;
+  markdown += `title: "🤖 每日 AI 资讯 - ${displayDate}"\n`;
   markdown += `date: ${hugoDate}\n`;
   markdown += `draft: false\n`;
   markdown += `tags: ["AI", "Daily News", "Technology"]\n`;
@@ -55,15 +51,20 @@ export async function buildMarkdownReport({
   markdown += `## 📊 今日看点\n\n`;
   markdown += `今日精选 **${articles.length} 篇** AI 行业重要资讯：\n\n`;
   
-  // 列出前5篇的标题作为看点
-  articles.slice(0, 5).forEach((article, index) => {
-    const emoji = ['🚀', '🌍', '💬', '🔥', '⚡'][index] || '📌';
-    const shortTitle = article.title.length > 40 ? article.title.substring(0, 40) + '...' : article.title;
+  // 列出所有文章的标题作为看点，添加锚点链接
+  articles.forEach((article, index) => {
+    const emoji = ['🚀', '🌍', '💬', '🔥', '⚡', '💡', '🎯', '🌟', '🔮', '⭐'][index] || '📌';
+    const shortTitle = article.title;
     // 从摘要中提取第一句话作为简短描述
-    const briefDesc = article.summary 
-      ? article.summary.split(/[。！？.!?]/)[0].substring(0, 50) + '...'
-      : '精彩内容，值得关注';
-    markdown += `- ${emoji} **${shortTitle}** - ${briefDesc}\n`;
+    let briefDesc = '';
+    if (article.summary) {
+      const firstSentence = article.summary.split(/[。！？\n]/)[0].trim();
+      briefDesc = firstSentence.length > 50 ? firstSentence.substring(0, 50) + '...' : firstSentence;
+    }
+    briefDesc = briefDesc || '精彩内容，值得关注';
+    
+    // 创建锚点链接，指向详细内容部分
+    markdown += `- ${emoji} **[${shortTitle}](#${index + 1}-${encodeURIComponent(article.title.replace(/[\s\?!,\.]/g, '-').toLowerCase())})** - ${briefDesc}\n`;
   });
   
   markdown += `\n<!--more-->\n\n`;
@@ -72,8 +73,9 @@ export async function buildMarkdownReport({
   markdown += `## 📰 详细内容\n\n`;
   
   articles.forEach((article, index) => {
-    // 标题
-    markdown += `### ${index + 1}. ${article.title}\n\n`;
+    // 标题（添加 id 用于锚点定位）
+    const anchorId = `${index + 1}-${encodeURIComponent(article.title.replace(/[\s\?!,\.]/g, '-').toLowerCase())}`;
+    markdown += `### ${index + 1}. ${article.title} {#${anchorId}}\n\n`;
     
     // 发布时间
     if (article.published_at) {
@@ -81,7 +83,7 @@ export async function buildMarkdownReport({
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
-      });
+      }).replace(/\//g, '/');
       markdown += `> 📅 **发布时间：** ${pubDate}\n\n`;
     }
     
@@ -98,15 +100,7 @@ export async function buildMarkdownReport({
     } else if (article.content) {
       markdown += `${article.content.substring(0, 300)}...\n\n`;
     } else {
-      markdown += `暂无详细内容。\n\n`;
-    }
-    
-    // 相关图片（如果有）
-    if (article.images && article.images.length > 0) {
-      markdown += `#### 📸 相关图片\n\n`;
-      article.images.slice(0, 2).forEach((img, imgIndex) => {
-        markdown += `![配图${imgIndex + 1}](${img})\n\n`;
-      });
+      markdown += `[在此添加内容概要]\n\n`;
     }
     
     // 原文链接
