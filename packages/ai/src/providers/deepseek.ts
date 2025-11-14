@@ -69,7 +69,7 @@ ${input.content.substring(0, 2000)}
       throw new Error(`DeepSeek API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
     const summary = data?.choices?.[0]?.message?.content;
     
     return summary || input.content.substring(0, 200);

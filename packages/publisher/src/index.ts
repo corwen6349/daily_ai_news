@@ -109,7 +109,7 @@ export async function publishReport(markdownOrHtml: string, date: string): Promi
     });
     
     if (repoResponse.ok) {
-      const repoData = await repoResponse.json();
+      const repoData = await repoResponse.json() as { default_branch?: string };
       branch = repoData.default_branch || branch;
       console.log(`✅ 检测到默认分支: ${branch}`);
     } else {
@@ -163,7 +163,7 @@ description: "${date} 的 AI 行业要闻精选"
     console.log(`检查响应状态: ${checkResponse.status}`);
     
     if (checkResponse.ok) {
-      const existingFile = await checkResponse.json();
+      const existingFile = await checkResponse.json() as { sha?: string };
       sha = existingFile.sha;
       console.log(`✅ 文件已存在，将更新: ${fileName} (SHA: ${sha?.substring(0, 7)}...)`);
     } else {
@@ -195,7 +195,7 @@ description: "${date} 的 AI 行业要闻精选"
       throw new Error(`GitHub API 请求失败: ${response.status} ${errorText}`);
     }
 
-    const result = await response.json();
+    const result = await response.json() as { commit?: { sha?: string } };
     const publishUrl = `https://github.com/${config.githubRepo}/blob/${branch}/${fileName}`;
     
     console.log(`✅ 日报已成功发布到 Hugo 博客: ${fileName}`);
