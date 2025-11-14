@@ -31,7 +31,7 @@ async function main() {
       date,
       html: htmlContent,
       publishedUrl,
-      articleIds: enriched.map(a => a.id)
+      articleIds: enriched.map(a => a.id).filter((id): id is string => !!id)
     });
     
     console.log('任务完成！日报 ID:', report.id);
