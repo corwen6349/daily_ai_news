@@ -102,18 +102,34 @@ export async function testRssSource(url: string): Promise<{ success: boolean; er
   }
 }
 
-// 检查文章是否为今日发布
-function isToday(dateString: string | undefined): boolean {
-  if (!dateString) return false;
+// 检查文章是否为今日或最近发布（放宽到24小时内）
+function isRecentOrToday(dateString: string | undefined): boolean {
+  if (!dateString) {
+    // 如果没有日期，认为是今天的（RSS 源可能不提供日期）
+    console.log('    ⚠️  无日期信息，默认保留');
+    return true;
+  }
   
   const articleDate = new Date(dateString);
-  const today = new Date();
+  const now = new Date();
   
-  return (
-    articleDate.getFullYear() === today.getFullYear() &&
-    articleDate.getMonth() === today.getMonth() &&
-    articleDate.getDate() === today.getDate()
+  // 检查是否为今日
+  const isToday = (
+    articleDate.getFullYear() === now.getFullYear() &&
+    articleDate.getMonth() === now.getMonth() &&
+    articleDate.getDate() === now.getDate()
   );
+  
+  if (isToday) return true;
+  
+  // 放宽条件：24小时内的文章也保留（避免时区问题）
+  const hoursDiff = (now.getTime() - articleDate.getTime()) / (1000 * 60 * 60);
+  if (hoursDiff >= 0 && hoursDiff <= 24) {
+    console.log(`    ℹ️  ${Math.round(hoursDiff)}小时前的文章，保留`);
+    return true;
+  }
+  
+  return false;
 }
 
 export async function fetchArticlesFromSources(sources: Source[]): Promise<Article[]> {
@@ -125,23 +141,31 @@ export async function fetchArticlesFromSources(sources: Source[]): Promise<Artic
   for (const source of sources) {
     try {
       const actualUrl = convertRssHubUrl(source.url);
-      console.log(`正在抓取: ${source.name} (${actualUrl})`);
+      console.log(`\n📡 正在抓取: ${source.name}`);
+      console.log(`   URL: ${actualUrl}`);
       const feed = await parser.parseURL(actualUrl);
       
+      console.log(`   获取到 ${feed.items.length} 条RSS项`);
       let todayCount = 0;
+      let skippedCount = 0;
       
       // 只保留今日发布的文章
       for (const item of feed.items) {
         if (!item.title || !item.link) {
+          skippedCount++;
           continue;
         }
         
-        // 检查是否为今日文章
-        if (!isToday(item.isoDate)) {
+        // 检查是否为今日或最近文章
+        if (!isRecentOrToday(item.isoDate)) {
+          skippedCount++;
+          const pubDate = item.isoDate ? new Date(item.isoDate).toLocaleString('zh-CN') : '无日期';
+          console.log(`    ⏭️  跳过旧文章: ${item.title.substring(0, 30)}... (${pubDate})`);
           continue;
         }
         
         todayCount++;
+        console.log(`    ✅ [${todayCount}] ${item.title}`);
         
         // 提取图片（异步）
         const images = await extractImagesFromUrl(item.link);
@@ -158,7 +182,7 @@ export async function fetchArticlesFromSources(sources: Source[]): Promise<Artic
         });
       }
       
-      console.log(`✅ 从 ${source.name} 获取到 ${todayCount} 篇今日文章`);
+      console.log(`   📊 ${source.name}: 保留 ${todayCount} 篇，跳过 ${skippedCount} 篇`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorCode = (error as any)?.code;
