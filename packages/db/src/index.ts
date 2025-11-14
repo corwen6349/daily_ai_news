@@ -211,9 +211,19 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
     return { inserted, updated };
   }
 
+  // 去重：按照 URL 去重，保留最后一条（通常是最新的）
+  const uniqueArticles = Array.from(
+    new Map(articles.map(article => [article.url, article])).values()
+  );
+  
+  const duplicatesRemoved = articles.length - uniqueArticles.length;
+  if (duplicatesRemoved > 0) {
+    console.log(`⚠️  去除了 ${duplicatesRemoved} 条重复的文章（相同URL）`);
+  }
+
   // 将代码字段映射到数据库字段
   // 注意：不包含 id 字段，让 Supabase 自动生成 UUID
-  const dbArticles = articles.map(article => ({
+  const dbArticles = uniqueArticles.map(article => ({
     source_id: article.source_id,
     title: article.title,
     link: article.url,  // url -> link
@@ -233,7 +243,7 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
     if (error) {
       throw handleSupabaseError(error, 'storeArticles');
     }
-    return { inserted: articles.length, updated: 0 };
+    return { inserted: uniqueArticles.length, updated: 0 };
   } catch (error) {
     // 如果是我们抛出的错误，直接传递
     if (error instanceof Error) {
