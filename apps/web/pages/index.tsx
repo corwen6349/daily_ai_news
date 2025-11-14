@@ -46,6 +46,11 @@ export default function HomePage() {
   const [showSourceModal, setShowSourceModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(50);
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(() => {
+    // 默认只展开今天的日期
+    const today = new Date().toISOString().split('T')[0];
+    return new Set([today]);
+  });
   
   const { data: sources = [], mutate: mutateSources } = useSWR<Source[]>('/api/sources', fetcher);
   const { data: articlesData, mutate: mutateArticles } = useSWR<ArticlesResponse>(
@@ -281,10 +286,12 @@ export default function HomePage() {
                           >
                             🗑️ 删除
                           </button>
-                        </div>
+                        ))}
                       </div>
+                      )}
                     </div>
-                  ))}
+                      );
+                    })}
                 </div>
               </div>
             )}
@@ -324,20 +331,37 @@ export default function HomePage() {
                       if (dateB === '未知日期') return -1;
                       return new Date(dateB).getTime() - new Date(dateA).getTime();
                     })
-                    .map(([date, dateArticles]) => (
+                    .map(([date, dateArticles]) => {
+                      const isExpanded = expandedDates.has(date);
+                      const isToday = date === new Date().toISOString().split('T')[0];
+                      return (
                     <div key={date} className="space-y-4">
-                      {/* 日期标题 */}
-                      <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-5 py-3 rounded-lg shadow-md flex items-center justify-between">
+                      {/* 日期标题 - 可点击折叠 */}
+                      <div 
+                        className="sticky top-0 z-10 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-5 py-3 rounded-lg shadow-md flex items-center justify-between cursor-pointer hover:shadow-lg transition-all"
+                        onClick={() => {
+                          const newExpanded = new Set(expandedDates);
+                          if (isExpanded) {
+                            newExpanded.delete(date);
+                          } else {
+                            newExpanded.add(date);
+                          }
+                          setExpandedDates(newExpanded);
+                        }}
+                      >
                         <h3 className="text-lg font-bold flex items-center gap-2">
+                          <span className="transition-transform" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
                           <span>📅</span>
                           <span>{date}</span>
+                          {isToday && <span className="text-xs bg-yellow-400 text-slate-800 px-2 py-0.5 rounded-full">今天</span>}
                         </h3>
                         <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
                           {dateArticles.length} 篇
                         </span>
                       </div>
                       
-                      {/* 该日期下的文章列表 */}
+                      {/* 该日期下的文章列表 - 可折叠 */}
+                      {isExpanded && (
                       <div className="space-y-3 pl-4">
                         {dateArticles.filter(article => article.id).map(article => (
                           <div 
@@ -423,10 +447,17 @@ export default function HomePage() {
               <div>
                 <h2 className="text-xl font-semibold text-slate-800 mb-6">📚 历史日报</h2>
                 <div className="grid gap-4">
-                  {processedReports.map(report => (
+                  {processedReports.map(report => {
+                    const reportUrl = report.published_url || report.github_url;
+                    return (
                     <div 
                       key={report.id} 
-                      className="rounded-lg p-6 shadow-md hover:shadow-xl transition-all bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 group outline-none focus:outline-none"
+                      className="rounded-lg p-6 shadow-md hover:shadow-xl transition-all bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 group outline-none focus:outline-none cursor-pointer"
+                      onClick={() => {
+                        if (reportUrl) {
+                          window.open(reportUrl, '_blank');
+                        }
+                      }}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -454,55 +485,18 @@ export default function HomePage() {
                               包含 {report.article_ids?.length || 0} 篇资讯
                             </span>
                             
-                            {(report.published_url || report.github_url) && (
+                            {reportUrl && (
                               <span className="flex items-center gap-1 text-green-600">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
-                                已发布
+                                点击查看完整日报
                               </span>
                             )}
                           </div>
                         </div>
-                        
-                        {(report.published_url || report.github_url) && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const url = report.published_url || report.github_url;
-                              if (url) {
-                                window.open(url, '_blank');
-                              }
-                            }}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            查看日报
-                          </button>
-                        )}
                       </div>
-                      
-                      {/* HTML 预览（可选） */}
-                      {report.html && (
-                        <div className="mt-4 pt-4 border-t border-green-200">
-                          <details className="group/details outline-none" onClick={(e) => e.stopPropagation()}>
-                            <summary className="cursor-pointer text-sm text-slate-600 hover:text-slate-800 flex items-center gap-2 select-none outline-none list-none">
-                              <svg className="w-4 h-4 transition-transform group-open/details:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                              预览内容
-                            </summary>
-                            <div 
-                              className="mt-3 p-4 bg-white rounded-lg text-sm text-slate-700 max-h-60 overflow-y-auto"
-                              dangerouslySetInnerHTML={{ __html: report.html.substring(0, 500) + '...' }}
-                            />
-                          </details>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                      );\n                    })}
                   {processedReports.length === 0 && (
                     <div className="text-center py-16 text-slate-500">
                       <div className="text-6xl mb-4">📭</div>
