@@ -43,7 +43,7 @@ export async function buildMarkdownReport({
     .substring(0, 150);
 
   // 大标题和日报摘要
-  let markdown = `# ${formattedDate} AI 资讯日报\n\n`;
+  let markdown = `# AI 日报 - ${formattedDate}\n\n`;
   markdown += `> 📅 **${formattedDate}** | 📊 **共 ${articles.length} 篇精选报道**\n\n`;
   markdown += `## 📋 今日摘要\n\n`;
   markdown += `今日AI资讯涵盖：${keywords}${keywords.length >= 150 ? '...' : ''}等领域的最新动态。`;

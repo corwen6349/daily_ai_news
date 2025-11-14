@@ -41,6 +41,7 @@ const articlesFetcher = (url: string) => fetch(url).then(res => res.json());
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'sources' | 'articles' | 'reports'>('sources');
   const [loading, setLoading] = useState(false);
+  const [loadingType, setLoadingType] = useState<'fetch' | 'generate'>('fetch');
   const [fetchProgress, setFetchProgress] = useState<string>('');
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
   const [editingSource, setEditingSource] = useState<Source | null>(null);
@@ -87,6 +88,7 @@ export default function HomePage() {
 
   const handleFetchNews = async () => {
     setLoading(true);
+    setLoadingType('fetch');
     setFetchProgress('正在抓取资讯...');
     try {
       const response = await fetch('/api/fetch-news', { method: 'POST' });
@@ -168,6 +170,8 @@ export default function HomePage() {
     }
 
     setLoading(true);
+    setLoadingType('generate');
+    setFetchProgress('正在生成日报...');
     try {
       const response = await fetch('/api/generate-report', {
         method: 'POST',
@@ -178,12 +182,18 @@ export default function HomePage() {
         })
       });
       const result = await response.json();
-      alert(`✅ 日报生成成功！\n已发布到：${result.url || 'GitHub Pages'}`);
-      setSelectedArticles(new Set());
+      setFetchProgress('日报生成成功！');
+      await mutateArticles(); // 刷新文章列表以显示标记
+      setTimeout(() => {
+        setLoading(false);
+        setFetchProgress('');
+        alert(`✅ 日报生成成功！\n已发布到：${result.url || 'GitHub Pages'}`);
+        setSelectedArticles(new Set());
+      }, 800);
     } catch (error) {
-      alert('❌ 生成失败：' + (error instanceof Error ? error.message : '未知错误'));
-    } finally {
+      setFetchProgress('');
       setLoading(false);
+      alert('❌ 生成失败：' + (error instanceof Error ? error.message : '未知错误'));
     }
   };
 
@@ -195,7 +205,9 @@ export default function HomePage() {
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mb-4"></div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">正在抓取资讯</h3>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                {loadingType === 'fetch' ? '正在抓取资讯' : '正在生成日报'}
+              </h3>
               <p className="text-slate-600 text-center">{fetchProgress || '请稍候...'}</p>
             </div>
           </div>
@@ -406,17 +418,24 @@ export default function HomePage() {
                                 className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                               />
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-base font-semibold text-slate-800 mb-2 leading-snug">
-                                  <a 
-                                    href={article.url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="hover:text-blue-600 transition-colors"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    {article.title}
-                                  </a>
-                                </h4>
+                                <div className="flex items-start gap-2 mb-2">
+                                  <h4 className="flex-1 text-base font-semibold text-slate-800 leading-snug">
+                                    <a 
+                                      href={article.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="hover:text-blue-600 transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {article.title}
+                                    </a>
+                                  </h4>
+                                  {reports.some(report => report.article_ids?.includes(article.id!)) && (
+                                    <span className="flex-shrink-0 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-300">
+                                      ✓ 已生成日报
+                                    </span>
+                                  )}
+                                </div>
                                 {article.summary && (
                                   <p className="text-slate-600 text-sm leading-relaxed mb-2 line-clamp-2">
                                     {article.summary}
