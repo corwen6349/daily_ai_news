@@ -30,59 +30,87 @@ export async function buildMarkdownReport({
   date: string;
   articles: Article[];
 }): Promise<string> {
-  const formattedDate = new Date(date).toLocaleDateString('zh-CN', {
+  const dateObj = new Date(date);
+  const formattedDate = dateObj.toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
+  
+  // Hugo front matter 格式的日期
+  const hugoDate = dateObj.toISOString();
+  const shortDate = date; // YYYY-MM-DD 格式
 
-  // 生成摘要（提取所有文章的核心关键词）
-  const keywords = articles
-    .map(a => a.title)
-    .join('、')
-    .substring(0, 150);
-
-  // 大标题和日报摘要
-  let markdown = `# AI 日报 - ${formattedDate}\n\n`;
-  markdown += `> 📅 **${formattedDate}** | 📊 **共 ${articles.length} 篇精选报道**\n\n`;
-  markdown += `## 📋 今日摘要\n\n`;
-  markdown += `今日AI资讯涵盖：${keywords}${keywords.length >= 150 ? '...' : ''}等领域的最新动态。`;
-  markdown += `本期日报精选了 ${articles.length} 篇重要资讯，为您带来AI领域的前沿进展和深度分析。\n\n`;
+  // Front Matter (Hugo 博客格式)
+  let markdown = `---\n`;
+  markdown += `title: "🤖 每日 AI 资讯 - ${date.replace(/-/g, '/')}"\n`;
+  markdown += `date: ${hugoDate}\n`;
+  markdown += `draft: false\n`;
+  markdown += `tags: ["AI", "Daily News", "Technology"]\n`;
+  markdown += `categories: ["AI Daily"]\n`;
+  markdown += `description: "${shortDate} 的 AI 行业要闻精选"\n`;
   markdown += `---\n\n`;
 
-  // 目录
-  markdown += `## 📑 目录\n\n`;
-  articles.forEach((article, index) => {
-    markdown += `${index + 1}. [${article.title}](#${index + 1}-${encodeURIComponent(article.title.replace(/[\\s\\?\\!\\,\\.]/g, '-').toLowerCase())})\n`;
+  // 今日看点（摘要）
+  markdown += `## 📊 今日看点\n\n`;
+  markdown += `今日精选 **${articles.length} 篇** AI 行业重要资讯：\n\n`;
+  
+  // 列出前5篇的标题作为看点
+  articles.slice(0, 5).forEach((article, index) => {
+    const emoji = ['🚀', '🌍', '💬', '🔥', '⚡'][index] || '📌';
+    const shortTitle = article.title.length > 40 ? article.title.substring(0, 40) + '...' : article.title;
+    // 从摘要中提取第一句话作为简短描述
+    const briefDesc = article.summary 
+      ? article.summary.split(/[。！？.!?]/)[0].substring(0, 50) + '...'
+      : '精彩内容，值得关注';
+    markdown += `- ${emoji} **${shortTitle}** - ${briefDesc}\n`;
   });
-  markdown += `\n---\n\n`;
+  
+  markdown += `\n<!--more-->\n\n`;
 
-  // 正文内容
+  // 详细内容
   markdown += `## 📰 详细内容\n\n`;
   
   articles.forEach((article, index) => {
-    // 小标题（使用 ### 三级标题）
+    // 标题
     markdown += `### ${index + 1}. ${article.title}\n\n`;
     
-    // 元信息
-    markdown += `> 🔗 **原文链接：** [点击访问](${article.url})\n`;
+    // 发布时间
     if (article.published_at) {
-      const pubDate = new Date(article.published_at).toLocaleDateString('zh-CN');
-      markdown += `> 📅 **发布时间：** ${pubDate}\n`;
+      const pubDate = new Date(article.published_at).toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      markdown += `> 📅 **发布时间：** ${pubDate}\n\n`;
     }
-    markdown += `\n`;
     
-    // 文章配图（如果有）
+    // 内容概要
+    markdown += `#### 📝 内容概要\n\n`;
+    if (article.summary) {
+      // 格式化摘要内容，确保段落清晰
+      const formattedSummary = article.summary
+        .split('\n\n')
+        .map(para => para.trim())
+        .filter(para => para.length > 0)
+        .join('\n\n');
+      markdown += `${formattedSummary}\n\n`;
+    } else if (article.content) {
+      markdown += `${article.content.substring(0, 300)}...\n\n`;
+    } else {
+      markdown += `暂无详细内容。\n\n`;
+    }
+    
+    // 相关图片（如果有）
     if (article.images && article.images.length > 0) {
       markdown += `#### 📸 相关图片\n\n`;
-      article.images.slice(0, 3).forEach((img, imgIndex) => {
+      article.images.slice(0, 2).forEach((img, imgIndex) => {
         markdown += `![配图${imgIndex + 1}](${img})\n\n`;
       });
     }
     
-    // AI 生成的报道内容
-    markdown += `#### 📝 内容概要\n\n`;
-    markdown += `${article.summary ?? article.content ?? '暂无内容'}\n\n`;
+    // 原文链接
+    markdown += `📎 [查看原文](${article.url})\n\n`;
     
     // 分隔线
     if (index < articles.length - 1) {
@@ -93,7 +121,7 @@ export async function buildMarkdownReport({
   // 页脚
   markdown += `\n---\n\n`;
   markdown += `## 💡 关于本日报\n\n`;
-  markdown += `本日报由 **Daily AI News Bot** 自动生成，基于 DeepSeek/Gemini AI 技术。\n\n`;
+  markdown += `本日报由 **Daily AI News Bot** 自动生成，基于 AI 技术。\n\n`;
   markdown += `- 🤖 AI 驱动的智能摘要\n`;
   markdown += `- 📊 每日精选优质资讯\n`;
   markdown += `- 🔄 自动化采集与生成\n\n`;
