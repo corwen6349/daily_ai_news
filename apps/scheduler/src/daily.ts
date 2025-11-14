@@ -24,13 +24,14 @@ async function main() {
     const htmlContent = await buildHtmlReport({ date, articles: enriched });
     console.log('已生成 HTML 日报');
     
-    await publishReport(htmlContent, date);
+    const publishedUrl = await publishReport(htmlContent, date);
     console.log('日报已发布');
     
     const report = await saveReport({
       date,
-      article_ids: enriched.map(a => a.id),
-      github_url: `https://<your-username>.github.io/<your-repo>/reports/${date}.html`
+      html: htmlContent,
+      publishedUrl,
+      articleIds: enriched.map(a => a.id)
     });
     
     console.log('任务完成！日报 ID:', report.id);
