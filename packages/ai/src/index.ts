@@ -118,8 +118,7 @@ ${articlesContent}
     return await generateVideoScriptWithGemini(prompt);
   } catch (error) {
     console.error('视频口播稿生成失败:', error);
-    // 返回简单的降级版本
-    return `大家好！今天是 ${formattedDate}，欢迎收看今日 AI 资讯。\n\n今天为您精选了 ${articles.length} 条重要新闻。${articles.slice(0, 2).map(a => a.title).join('；')}。\n\n以上就是今天的 AI 资讯，我们明天见！`;
+    throw error;
   }
 }
 
