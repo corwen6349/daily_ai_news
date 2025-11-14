@@ -41,6 +41,7 @@ const articlesFetcher = (url: string) => fetch(url).then(res => res.json());
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'sources' | 'articles' | 'reports'>('sources');
   const [loading, setLoading] = useState(false);
+  const [fetchProgress, setFetchProgress] = useState<string>('');
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
   const [editingSource, setEditingSource] = useState<Source | null>(null);
   const [showSourceModal, setShowSourceModal] = useState(false);
@@ -86,15 +87,23 @@ export default function HomePage() {
 
   const handleFetchNews = async () => {
     setLoading(true);
+    setFetchProgress('正在抓取资讯...');
     try {
       const response = await fetch('/api/fetch-news', { method: 'POST' });
       const result = await response.json();
-      alert(`✅ 成功抓取 ${result.count} 篇资讯`);
-      mutateArticles();
+      setFetchProgress(`成功抓取 ${result.count} 篇资讯`);
+      await mutateArticles();
+      // 延迟一下让用户看到成功消息，然后自动切换到资讯列表
+      setTimeout(() => {
+        setLoading(false);
+        setFetchProgress('');
+        setActiveTab('articles');
+        setCurrentPage(1);
+      }, 800);
     } catch (error) {
-      alert('❌ 抓取失败：' + (error instanceof Error ? error.message : '未知错误'));
-    } finally {
+      setFetchProgress('');
       setLoading(false);
+      alert('❌ 抓取失败：' + (error instanceof Error ? error.message : '未知错误'));
     }
   };
 
@@ -180,6 +189,19 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mb-4"></div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">正在抓取资讯</h3>
+              <p className="text-slate-600 text-center">{fetchProgress || '请稍候...'}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

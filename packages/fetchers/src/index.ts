@@ -102,34 +102,25 @@ export async function testRssSource(url: string): Promise<{ success: boolean; er
   }
 }
 
-// 检查文章是否为今日或最近发布（放宽到24小时内）
-function isRecentOrToday(dateString: string | undefined): boolean {
+// 严格检查文章是否为当日发布
+function isToday(dateString: string | undefined): boolean {
   if (!dateString) {
-    // 如果没有日期，认为是今天的（RSS 源可能不提供日期）
-    console.log('    ⚠️  无日期信息，默认保留');
-    return true;
+    // 如果没有日期，跳过
+    console.log('    ⚠️  无日期信息，跳过');
+    return false;
   }
   
   const articleDate = new Date(dateString);
   const now = new Date();
   
-  // 检查是否为今日
+  // 严格检查是否为今日（年月日必须完全匹配）
   const isToday = (
     articleDate.getFullYear() === now.getFullYear() &&
     articleDate.getMonth() === now.getMonth() &&
     articleDate.getDate() === now.getDate()
   );
   
-  if (isToday) return true;
-  
-  // 放宽条件：24小时内的文章也保留（避免时区问题）
-  const hoursDiff = (now.getTime() - articleDate.getTime()) / (1000 * 60 * 60);
-  if (hoursDiff >= 0 && hoursDiff <= 24) {
-    console.log(`    ℹ️  ${Math.round(hoursDiff)}小时前的文章，保留`);
-    return true;
-  }
-  
-  return false;
+  return isToday;
 }
 
 export async function fetchArticlesFromSources(sources: Source[]): Promise<Article[]> {
@@ -156,11 +147,11 @@ export async function fetchArticlesFromSources(sources: Source[]): Promise<Artic
           continue;
         }
         
-        // 检查是否为今日或最近文章
-        if (!isRecentOrToday(item.isoDate)) {
+        // 检查是否为今日文章
+        if (!isToday(item.isoDate)) {
           skippedCount++;
           const pubDate = item.isoDate ? new Date(item.isoDate).toLocaleString('zh-CN') : '无日期';
-          console.log(`    ⏭️  跳过旧文章: ${item.title.substring(0, 30)}... (${pubDate})`);
+          console.log(`    ⏭️  跳过非当日文章: ${item.title.substring(0, 30)}... (${pubDate})`);
           continue;
         }
         
