@@ -18,10 +18,15 @@ coverage/
 .env.production
 .env.test
 .env.*.local
+apps/web/.env
+apps/*/.env
 
 # SSH keys and credentials
 c
 c.pub
+*.pem
+*.key
+id_rsa*
 
 # IDE
 .vscode/
