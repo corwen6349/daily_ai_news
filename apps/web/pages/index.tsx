@@ -352,14 +352,17 @@ export default function HomePage() {
                       return new Date(dateB).getTime() - new Date(dateA).getTime();
                     })
                     .map(([date, dateArticles]) => {
-                      const isExpanded = expandedDates.has(date);
                       const isToday = date === new Date().toISOString().split('T')[0];
+                      const isExpanded = isToday || expandedDates.has(date);
                       return (
                     <div key={date} className="space-y-4">
-                      {/* 日期标题 - 可点击折叠 */}
+                      {/* 日期标题 - 当日不可折叠，历史可折叠 */}
                       <div 
-                        className="sticky top-0 z-10 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-5 py-3 rounded-lg shadow-md flex items-center justify-between cursor-pointer hover:shadow-lg transition-all"
+                        className={`sticky top-0 z-10 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-5 py-3 rounded-lg shadow-md flex items-center justify-between transition-all ${
+                          isToday ? '' : 'cursor-pointer hover:shadow-lg'
+                        }`}
                         onClick={() => {
+                          if (isToday) return; // 当日不可折叠
                           const newExpanded = new Set(expandedDates);
                           if (isExpanded) {
                             newExpanded.delete(date);
@@ -370,7 +373,9 @@ export default function HomePage() {
                         }}
                       >
                         <h3 className="text-lg font-bold flex items-center gap-2">
-                          <span className="transition-transform" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+                          {!isToday && (
+                            <span className="transition-transform" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+                          )}
                           <span>📅</span>
                           <span>{date}</span>
                           {isToday && <span className="text-xs bg-yellow-400 text-slate-800 px-2 py-0.5 rounded-full">今天</span>}
@@ -380,7 +385,7 @@ export default function HomePage() {
                         </span>
                       </div>
                       
-                      {/* 该日期下的文章列表 - 可折叠 */}
+                      {/* 该日期下的文章列表 */}
                       {isExpanded && (
                       <div className="space-y-3 pl-4">
                         {dateArticles.filter(article => article.id).map(article => (

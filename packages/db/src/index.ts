@@ -184,6 +184,44 @@ export async function listArticles({
   }
 }
 
+// 删除当日的文章（在重新抓取前清理）
+export async function deleteTodayArticles(): Promise<number> {
+  const today = new Date().toISOString().split('T')[0];
+  
+  if (!hasSupabaseConfig()) {
+    const store = getMemoryStore();
+    const beforeCount = store.articles.length;
+    store.articles = store.articles.filter(article => {
+      if (!article.published_at) return true;
+      const articleDate = new Date(article.published_at).toISOString().split('T')[0];
+      return articleDate !== today;
+    });
+    const deleted = beforeCount - store.articles.length;
+    console.log(`🗑️  删除了 ${deleted} 条当日旧数据`);
+    return deleted;
+  }
+
+  try {
+    const { data, error } = await getSupabase()
+      .from('articles')
+      .delete()
+      .gte('pub_date', `${today}T00:00:00`)
+      .lt('pub_date', `${today}T23:59:59`)
+      .select();
+    
+    if (error) {
+      throw handleSupabaseError(error, 'deleteTodayArticles');
+    }
+    
+    const deleted = data?.length || 0;
+    console.log(`🗑️  删除了 ${deleted} 条当日旧数据`);
+    return deleted;
+  } catch (error) {
+    console.error('删除当日文章失败:', error);
+    return 0;
+  }
+}
+
 export async function storeArticles(articles: Article[]): Promise<{ inserted: number; updated: number }> {
   if (!articles.length) {
     return { inserted: 0, updated: 0 };

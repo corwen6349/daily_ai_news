@@ -1,11 +1,16 @@
 ﻿import type { NextApiRequest, NextApiResponse } from 'next';
-import { listSources } from '@daily-ai-news/db';
+import { listSources, deleteTodayArticles } from '@daily-ai-news/db';
 import { fetchArticlesFromSources } from '@daily-ai-news/fetchers';
 import { storeArticles } from '@daily-ai-news/db';
 
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   try {
     console.log('Starting fetch-news...');
+    
+    // 删除当日旧数据
+    console.log('Deleting today\'s old articles...');
+    const deleted = await deleteTodayArticles();
+    console.log(`Deleted ${deleted} old articles for today`);
     
     const sources = await listSources();
     console.log(`Found ${sources.length} sources`, sources);
