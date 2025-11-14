@@ -5,13 +5,14 @@
   "main": "src/daily.ts",
   "types": "src/daily.ts",
   "scripts": {
-    "start": "node dist/daily.js",
-    "build": "tsc --project tsconfig.json"
+    "start": "tsx src/daily.ts",
+    "build": "echo 'Build not required when using tsx'"
   },
   "dependencies": {
     "@daily-ai-news/db": "1.0.0",
     "@daily-ai-news/fetchers": "1.0.0",
-    "@daily-ai-news/processors": "1.0.0"
+    "@daily-ai-news/processors": "1.0.0",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

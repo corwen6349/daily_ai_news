@@ -33,9 +33,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build scheduler
-        run: npm run build --workspace @daily-ai-news/scheduler
-
       - name: Run scheduler (generate & publish report)
-        # `npm run scheduler` uses the workspace start script which runs the built JS
+        # Using tsx to run TypeScript directly without build step
         run: npm run scheduler
