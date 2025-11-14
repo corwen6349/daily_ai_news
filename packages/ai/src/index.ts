@@ -53,8 +53,6 @@ export async function summarize(input: SummaryInput): Promise<string> {
 }
 
 export async function generateVideoScript(reportDate: string, articles: Array<{ title: string; summary?: string; url: string }>): Promise<string> {
-  const provider = process.env.AI_PROVIDER ?? 'gemini';
-  
   const formattedDate = new Date(reportDate).toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
@@ -112,10 +110,7 @@ ${articlesContent}
 现在开始生成完整的口播稿，直接输出，不要添加标题。`;
   
   try {
-    if (provider === 'deepseek') {
-      return await generateVideoScriptWithDeepSeek(prompt);
-    }
-    return await generateVideoScriptWithGemini(prompt);
+    return await generateVideoScriptWithDeepSeek(prompt);
   } catch (error) {
     console.error('视频口播稿生成失败:', error);
     throw error;
@@ -153,39 +148,6 @@ async function generateVideoScriptWithDeepSeek(prompt: string): Promise<string> 
   
   const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
   return data?.choices?.[0]?.message?.content || '';
-}
-
-async function generateVideoScriptWithGemini(prompt: string): Promise<string> {
-  const { getConfig } = await import('@daily-ai-news/config');
-  const { geminiApiKey } = getConfig();
-  
-  if (!geminiApiKey) {
-    throw new Error('Gemini API key not configured');
-  }
-  
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.8,
-          maxOutputTokens: 800
-        }
-      })
-    }
-  );
-  
-  if (!response.ok) {
-    throw new Error(`Gemini API error: ${response.status}`);
-  }
-  
-  const data = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 export type { SummaryInput } from './types';
