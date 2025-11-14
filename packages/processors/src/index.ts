@@ -44,16 +44,9 @@ export async function buildMarkdownReport({
   articles.forEach((article, index) => {
     const emoji = ['🚀', '🌍', '💬', '🔥', '⚡', '💡', '🎯', '🌟', '🔮', '⭐'][index] || '📌';
     const shortTitle = article.title;
-    // 从摘要中提取第一句话作为简短描述
-    let briefDesc = '';
-    if (article.summary) {
-      const firstSentence = article.summary.split(/[。！？\n]/)[0].trim();
-      briefDesc = firstSentence.length > 50 ? firstSentence.substring(0, 50) + '...' : firstSentence;
-    }
-    briefDesc = briefDesc || '精彩内容，值得关注';
     
-    // 创建锚点链接，指向详细内容部分
-    markdown += `- ${emoji} **[${shortTitle}](#${index + 1}-${encodeURIComponent(article.title.replace(/[\s\?!,\.]/g, '-').toLowerCase())})** - ${briefDesc}\n`;
+    // 创建锁点链接，指向详细内容部分（不添加简短描述）
+    markdown += `- ${emoji} **[${shortTitle}](#${index + 1}-${encodeURIComponent(article.title.replace(/[\s\?!,\.]/g, '-').toLowerCase())})**\n`;
   });
   
   markdown += `\n<!--more-->\n\n`;
