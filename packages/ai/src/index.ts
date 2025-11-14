@@ -66,7 +66,7 @@ export async function generateVideoScript(reportDate: string, articles: Array<{ 
     `${index + 1}. ${article.title}\n${article.summary || ''}\n`
   ).join('\n');
   
-  const prompt = `请为以下 AI 日报内容生成一段 1 分钟左右的视频口播稿。
+  const prompt = `请为以下 AI 日报内容生成一段完整的 1 分钟视频口播稿。
 
 日期：${formattedDate}
 文章数量：${articles.length} 篇
@@ -75,16 +75,35 @@ export async function generateVideoScript(reportDate: string, articles: Array<{ 
 ${articlesContent}
 
 要求：
-1. 开场白：简短有力，点明日期和主题（15秒）
-2. 核心内容：挑选 3-4 个最重要的新闻，每个用 10-15 秒介绍核心要点
-3. 结尾：总结今日AI领域趋势，引导关注（10秒）
+1. 开场白（约 15 秒 / 50 字）：
+   - 热情问候，点明日期
+   - 快速引入今日主题
+   
+2. 核心内容（约 35-40 秒 / 120-150 字）：
+   - 挑选 3-4 个最重要的新闻
+   - 每个新闻用 10-12 秒介绍核心亮点
+   - 用转折词连接（“接下来”、“另外”、“值得关注的是”）
+   
+3. 结尾（约 10-12 秒 / 35-45 字）：
+   - 总结今日 AI 领域趋势或亮点
+   - 热情引导关注、期待明天
+   - 给观众留下深刻印象
+   
 4. 语言风格：
-   - 口语化、自然流畅
+   - 口语化、自然流畅，像对朋友聊天
    - 节奏明快，信息密度高
-   - 适合短视频场景
-   - 避免生硬的书面语
-5. 总时长：约 60 秒（约 200-250 字）
-6. 格式：纯文本，分段清晰，标注停顿位置
+   - 适合短视频场景，有感染力
+   - 避免生硬的书面语和过于正式的表达
+   - 可以适当使用感叹词（“哇”、“哇”）增加生动性
+   
+5. 总时长：约 60 秒（总计 220-260 字）
+
+6. 格式：
+   - 纯文本，分段清晰
+   - 每段之间用空行分隔
+   - 可以用 "/" 或 "……" 标记停顿位置
+   
+7. 重要：必须写完整，有开头、中间、结尾，不要突然结束或省略任何部分。
 
 直接输出口播稿，不要添加标题或额外说明。`;
   
@@ -117,10 +136,10 @@ async function generateVideoScriptWithDeepSeek(prompt: string): Promise<string> 
     body: JSON.stringify({
       model: 'deepseek-chat',
       messages: [
-        { role: 'system', content: '你是一位专业的短视频内容创作者，擅长撰写简洁有力、节奏明快的口播稿。' },
+        { role: 'system', content: '你是一位专业的短视频内容创作者，擅长撰写完整、简洁有力、节奏明快的口播稿。每个口播稿都必须有开头、中间、结尾，内容完整。' },
         { role: 'user', content: prompt }
       ],
-      max_tokens: 600,
+      max_tokens: 800,
       temperature: 0.8
     })
   });
@@ -152,7 +171,7 @@ async function generateVideoScriptWithGemini(prompt: string): Promise<string> {
         }],
         generationConfig: {
           temperature: 0.8,
-          maxOutputTokens: 600
+          maxOutputTokens: 800
         }
       })
     }
