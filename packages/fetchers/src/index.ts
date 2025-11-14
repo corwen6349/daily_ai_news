@@ -80,10 +80,21 @@ async function extractImagesFromUrl(url: string): Promise<string[]> {
   }
 }
 
+// 转换 rsshub:// 协议到实际 HTTP URL
+function convertRssHubUrl(url: string): string {
+  // 如果是 rsshub:// 协议，转换为 https://rsshub.app/
+  if (url.startsWith('rsshub://')) {
+    const path = url.replace('rsshub://', '');
+    return `https://rsshub.app/${path}`;
+  }
+  return url;
+}
+
 // 测试单个 RSS 源是否可用
 export async function testRssSource(url: string): Promise<{ success: boolean; error?: string }> {
   try {
-    await parser.parseURL(url);
+    const actualUrl = convertRssHubUrl(url);
+    await parser.parseURL(actualUrl);
     return { success: true };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -113,8 +124,9 @@ export async function fetchArticlesFromSources(sources: Source[]): Promise<Artic
 
   for (const source of sources) {
     try {
-      console.log(`正在抓取: ${source.name} (${source.url})`);
-      const feed = await parser.parseURL(source.url);
+      const actualUrl = convertRssHubUrl(source.url);
+      console.log(`正在抓取: ${source.name} (${actualUrl})`);
+      const feed = await parser.parseURL(actualUrl);
       
       let todayCount = 0;
       
