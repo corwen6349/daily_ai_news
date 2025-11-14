@@ -1,0 +1,38 @@
+name: Generate and publish daily report
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # daily at 00:00 UTC (adjust as needed)
+  workflow_dispatch: {}
+
+jobs:
+  run-scheduler:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
+      GITHUB_BRANCH: ${{ secrets.GITHUB_BRANCH }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build scheduler
+        run: npm run build --workspace @daily-ai-news/scheduler
+
+      - name: Run scheduler (generate & publish report)
+        # `npm run scheduler` uses the workspace start script which runs the built JS
+        run: npm run scheduler
