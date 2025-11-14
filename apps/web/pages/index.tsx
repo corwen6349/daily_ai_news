@@ -403,8 +403,10 @@ export default function HomePage() {
                           </div>
                         ))}
                       </div>
+                      )}
                     </div>
-                  ))}
+                    );
+                  })}
                   
                   {articles.length === 0 && (
                     <div className="text-center py-16 text-slate-500">
