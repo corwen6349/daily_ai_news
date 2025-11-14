@@ -31,21 +31,10 @@ export async function buildMarkdownReport({
   articles: Article[];
 }): Promise<string> {
   const dateObj = new Date(date);
-  
-  // Hugo front matter 格式的日期
-  const hugoDate = dateObj.toISOString();
-  const shortDate = date; // YYYY-MM-DD 格式
   const displayDate = date.replace(/-/g, '/'); // YYYY/MM/DD 格式
 
-  // Front Matter (Hugo 博客格式)
-  let markdown = `---\n`;
-  markdown += `title: "🤖 每日 AI 资讯 - ${displayDate}"\n`;
-  markdown += `date: ${hugoDate}\n`;
-  markdown += `draft: false\n`;
-  markdown += `tags: ["AI", "Daily News", "Technology"]\n`;
-  markdown += `categories: ["AI Daily"]\n`;
-  markdown += `description: "${shortDate} 的 AI 行业要闻精选"\n`;
-  markdown += `---\n\n`;
+  // 开始 Markdown 内容（不包含 Front Matter）
+  let markdown = '';
 
   // 今日看点（摘要）
   markdown += `## 📊 今日看点\n\n`;
