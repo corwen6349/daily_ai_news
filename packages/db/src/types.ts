@@ -26,5 +26,6 @@ export interface Report {
   published_url?: string;
   github_url?: string;
   article_ids: string[];
+  video_script?: string;  // 视频口播稿
   created_at?: string;
 }

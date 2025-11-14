@@ -347,6 +347,7 @@ export async function listReports(): Promise<Report[]> {
       html: item.html_content,
       published_url: item.publish_url,
       article_ids: item.article_ids || [],
+      video_script: item.video_script,
       created_at: item.created_at
     }));
   } catch (error) {
@@ -359,12 +360,14 @@ export async function saveReport({
   date,
   html,
   publishedUrl,
-  articleIds
+  articleIds,
+  videoScript
 }: {
   date: string;
   html: string;
   publishedUrl?: string;
   articleIds: string[];
+  videoScript?: string;
 }): Promise<Report> {
   if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
@@ -374,6 +377,7 @@ export async function saveReport({
       html,
       published_url: publishedUrl,
       article_ids: articleIds,
+      video_script: videoScript,
       created_at: new Date().toISOString()
     };
     store.reports.unshift(report);
@@ -388,7 +392,8 @@ export async function saveReport({
       html_content: html,
       publish_url: publishedUrl,
       report_date: date,
-      article_ids: articleIds
+      article_ids: articleIds,
+      video_script: videoScript
     })
     .select()
     .single();
@@ -437,6 +442,7 @@ export async function saveReport({
     html: data.html_content,
     published_url: data.publish_url,
     article_ids: data.article_ids || [],
+    video_script: data.video_script,
     created_at: data.created_at
   } as Report;
 }

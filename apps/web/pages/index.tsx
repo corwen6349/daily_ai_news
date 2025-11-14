@@ -46,6 +46,8 @@ export default function HomePage() {
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
   const [editingSource, setEditingSource] = useState<Source | null>(null);
   const [showSourceModal, setShowSourceModal] = useState(false);
+  const [showVideoScriptModal, setShowVideoScriptModal] = useState(false);
+  const [currentVideoScript, setCurrentVideoScript] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(50);
   const [expandedDates, setExpandedDates] = useState<Set<string>>(() => {
@@ -498,15 +500,17 @@ export default function HomePage() {
                     return (
                     <div 
                       key={report.id} 
-                      className="rounded-lg p-6 shadow-md hover:shadow-xl transition-all bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 group outline-none focus:outline-none cursor-pointer"
-                      onClick={() => {
-                        if (reportUrl) {
-                          window.open(reportUrl, '_blank');
-                        }
-                      }}
+                      className="rounded-lg p-6 shadow-md hover:shadow-xl transition-all bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 group outline-none focus:outline-none"
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
+                      <div className="flex justify-between items-start gap-4">
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => {
+                            if (reportUrl) {
+                              window.open(reportUrl, '_blank');
+                            }
+                          }}
+                        >
                           <div className="flex items-center gap-3 mb-3">
                             <span className="text-3xl">📰</span>
                             <div>
@@ -541,6 +545,23 @@ export default function HomePage() {
                             )}
                           </div>
                         </div>
+                        
+                        {/* 视频口播稿按钮 */}
+                        {report.video_script && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentVideoScript(report.video_script!);
+                              setShowVideoScriptModal(true);
+                            }}
+                            className="flex-shrink-0 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            查看口播稿
+                          </button>
+                        )}
                       </div>
                     </div>
                     );
@@ -617,6 +638,59 @@ export default function HomePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Video Script Modal */}
+      {showVideoScriptModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                视频口播稿
+              </h3>
+              <button
+                onClick={() => setShowVideoScriptModal(false)}
+                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                <pre className="whitespace-pre-wrap font-sans text-slate-800 leading-relaxed text-base">
+                  {currentVideoScript}
+                </pre>
+              </div>
+            </div>
+            
+            <div className="border-t border-slate-200 px-6 py-4 flex gap-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(currentVideoScript);
+                  alert('✅ 口播稿已复制到剪贴板');
+                }}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                复制口播稿
+              </button>
+              <button
+                onClick={() => setShowVideoScriptModal(false)}
+                className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+              >
+                关闭
+              </button>
+            </div>
           </div>
         </div>
       )}

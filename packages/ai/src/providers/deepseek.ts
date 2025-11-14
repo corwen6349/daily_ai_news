@@ -42,8 +42,6 @@ export async function summarizeWithDeepSeek(input: SummaryInput): Promise<string
 
 **标题：** ${input.title}
 
-**原文链接：** ${input.url}
-
 **内容：**
 ${input.content.substring(0, 2000)}
 
