@@ -1,6 +1,17 @@
 import { summarize } from '@daily-ai-news/ai';
 import { Article } from '@daily-ai-news/db';
 
+function buildAnchor(index: number, title: string): string {
+  const normalized = title
+    .trim()
+    .replace(/[\s!?.,#]+/g, '-')
+    .replace(/[^\w\-\u4e00-\u9fa5]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
+  return `${index + 1}-${normalized || index + 1}`;
+}
+
 export async function enrichArticles(articles: Article[]): Promise<Article[]> {
   const enriched: Article[] = [];
 
@@ -46,7 +57,8 @@ export async function buildMarkdownReport({
     const shortTitle = article.title;
     
     // 创建锁点链接，指向详细内容部分（不添加简短描述）
-    markdown += `- ${emoji} **[${shortTitle}](#${index + 1}-${encodeURIComponent(article.title.replace(/[\s\?!,\.]/g, '-').toLowerCase())})**\n`;
+    const anchorId = buildAnchor(index, article.title);
+    markdown += `- ${emoji} **[${shortTitle}](#${anchorId})**\n`;
   });
   
   markdown += `\n<!--more-->\n\n`;
@@ -56,7 +68,7 @@ export async function buildMarkdownReport({
   
   articles.forEach((article, index) => {
     // 标题（添加 id 用于锚点定位）
-    const anchorId = `${index + 1}-${encodeURIComponent(article.title.replace(/[\s\?!,\.]/g, '-').toLowerCase())}`;
+    const anchorId = buildAnchor(index, article.title);
     markdown += `### ${index + 1}. ${article.title} {#${anchorId}}\n\n`;
     
     // 发布时间
