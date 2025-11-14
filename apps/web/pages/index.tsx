@@ -496,7 +496,8 @@ export default function HomePage() {
                           </div>
                         </div>
                       </div>
-                      );\n                    })}
+                    );
+                  })}
                   {processedReports.length === 0 && (
                     <div className="text-center py-16 text-slate-500">
                       <div className="text-6xl mb-4">📭</div>
