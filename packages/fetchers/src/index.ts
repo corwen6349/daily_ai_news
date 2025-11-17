@@ -102,7 +102,7 @@ export async function testRssSource(url: string): Promise<{ success: boolean; er
   }
 }
 
-// 严格检查文章是否为当日发布
+// 严格检查文章是否为当日发布（UTC 时间）
 function isToday(dateString: string | undefined): boolean {
   if (!dateString) {
     // 如果没有日期，跳过
@@ -113,12 +113,12 @@ function isToday(dateString: string | undefined): boolean {
   const articleDate = new Date(dateString);
   const now = new Date();
   
+  // 转换为 UTC 日期进行比较
+  const articleUtcDate = new Date(Date.UTC(articleDate.getUTCFullYear(), articleDate.getUTCMonth(), articleDate.getUTCDate()));
+  const nowUtcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  
   // 严格检查是否为今日（年月日必须完全匹配）
-  const isToday = (
-    articleDate.getFullYear() === now.getFullYear() &&
-    articleDate.getMonth() === now.getMonth() &&
-    articleDate.getDate() === now.getDate()
-  );
+  const isToday = articleUtcDate.getTime() === nowUtcDate.getTime();
   
   return isToday;
 }

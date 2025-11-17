@@ -1,8 +1,8 @@
-name: Generate and publish daily report
+name: Catch daily news
 
 on:
   schedule:
-    - cron: '0 0 * * *' # daily at 00:00 UTC (adjust as needed)
+    - cron: '0 0 * * *' # daily at 08:00 Beijing Time (00:00 UTC)
   workflow_dispatch: {}
 
 jobs:
