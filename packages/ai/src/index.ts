@@ -20,7 +20,7 @@ export async function summarize(input: SummaryInput): Promise<string> {
   }
 }
 
-export async function generateVideoScript(reportDate: string, articles: Array<{ title: string; summary?: string; url: string }>): Promise<string> {
+export async function generateVideoScript(reportDate: string, articles: Array<{ title: string; summary?: string; url: string }>): Promise<{ title: string; script: string }> {
   const { geminiApiKey } = getConfig();
   
   const formattedDate = new Date(reportDate).toLocaleDateString('zh-CN', {
@@ -32,60 +32,75 @@ export async function generateVideoScript(reportDate: string, articles: Array<{ 
   const articlesContent = articles.map((article, index) => 
     `${index + 1}. ${article.title}\n${article.summary || ''}\n`
   ).join('\n');
-  
-  const prompt = `请为以下 AI 日报内容生成一段完整的 1 分钟视频口播稿。
 
-日期：${formattedDate}
-文章数量：${articles.length} 篇
+  // Step 1: Generate the explosive title
+  const titlePrompt = `从以下 AI 资讯中，提炼出一个最能吸引眼球的“爆点标题”。
+标题要像一个结论或一个惊人的功能点。
+例如：“OpenAI 发布了全新的图像生成模型，速度提升 50%！”
 
-文章列表：
+资讯列表：
 ${articlesContent}
 
-要求：
-1. 开场白（约 20 秒 / 60-80 字）：
-   - 热情问候，点明日期
-   - 快速引入今日主题
-   - 可以加入引人入胜的开场
-   
-2. 核心内容（约 45-55 秒 / 180-220 字）：
-   - 挑选 3-4 个最重要的新闻
-   - 每个新闻用 12-15 秒介绍核心亮点和关键细节
-   - 用转折词连接（"接下来"、"另外"、"值得关注的是"）
-   - 提供足够的信息让观众理解新闻重要性
-   
-3. 结尾（约 15-20 秒 / 60-80 字）：
-   - 总结今日 AI 领域趋势或亮点
-   - 点评今日新闻的整体意义
-   - 热情引导关注、期待明天
-   - 给观众留下深刻印象
-   
-4. 语言风格：
-   - 口语化、自然流畅，像对朋友聊天
-   - 节奏明快，信息密度高
-   - 可以使用感叹词（"哇"、"哦"、"真的吗"）
-   
-5. 总计字数：300-380 字（约 80-100 秒）
+直接输出标题，不要任何多余的文字。`;
 
-6. 绝对禁止：
-   - 不能中途截断，必须写完三个部分
-   - 不能省略结尾
-   - 不能使用 "……" 或 "等等" 结束
-   - 最后一句必须是完整的告别语
-
-7. 输出格式：
-   - 纯文本，每部分之间用空行分隔
-   - 可以用 "/" 或 "……" 标记停顿
-
-现在开始生成完整的口播稿，直接输出，不要添加标题。`;
-  
+  let explosiveTitle = '';
   try {
     if (geminiApiKey) {
+      console.log('Using Gemini for video script title.');
+      explosiveTitle = await generateVideoScriptWithGemini(titlePrompt);
+    } else {
+      console.log('Using DeepSeek for video script title.');
+      explosiveTitle = await generateVideoScriptWithDeepSeek(titlePrompt);
+    }
+  } catch (error) {
+    console.error('Video script title generation failed, using default title.', error);
+    explosiveTitle = `${formattedDate} AI 前沿动态`;
+  }
+  
+  const scriptPrompt = `请为以下 AI 日报内容生成一段完整的、符合 TikTok/Shorts 风格的 1 分钟视频口播稿。
+
+**爆点标题：** ${explosiveTitle}
+
+**日期：** ${formattedDate}
+**文章数量：** ${articles.length} 篇
+
+**文章列表：**
+${articlesContent}
+
+**脚本要求 (TikTok/Shorts 风格):**
+1.  **第一句话必须是钩子 (Hook)**：
+    *   直接使用或围绕“爆点标题”展开，用一个问题或一个惊人的结论激起观众的好奇心。
+    *   例如：“AI 一天，人间一年！今天又有哪些大事发生？”
+
+2.  **核心内容 (快节奏、高信息密度)**：
+    *   挑选 2-3 个最炸裂的新闻。
+    *   每个新闻用 1-2 句话讲清楚核心亮点，语速要快。
+    *   使用“首先”、“接着”、“还有这个”等口语化转折词。
+    *   口吻要激动人心，充满激情！
+
+3.  **结尾必须是行动号召 (Call to Action)**：
+    *   用一句话总结今天最激动人心的点。
+    *   明确引导用户操作，例如：“想每天跟上 AI 最新动态，赶紧关注我！”或“你最期待哪个功能？评论区告诉我！”
+
+**硬性要求：**
+*   **语速**：快！感觉像在追赶时间。
+*   **口吻**：激动人心！想象你在分享一个天大的好消息。
+*   **总时长**：控制在 50-60 秒。
+*   **禁止**：不能平淡，不能中途结束，必须有明确的行动号召。
+*   **输出**：纯文本，不要标题。
+
+现在，开始生成这段激动人心的口播稿！`;
+  
+  try {
+    let script = '';
+    if (geminiApiKey) {
       console.log('Using Gemini for video script generation.');
-      return await generateVideoScriptWithGemini(prompt);
+      script = await generateVideoScriptWithGemini(scriptPrompt);
     } else {
       console.log('Using DeepSeek for video script generation.');
-      return await generateVideoScriptWithDeepSeek(prompt);
+      script = await generateVideoScriptWithDeepSeek(scriptPrompt);
     }
+    return { title: explosiveTitle.replace(/["“]/g, ''), script };
   } catch (error) {
     console.error('Video script generation failed:', error);
     throw error; // Re-throw the error to be handled by the caller

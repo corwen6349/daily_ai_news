@@ -60,12 +60,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 4.5 生成视频口播稿
     console.log(`🎬 正在生成视频口播稿...`);
     let videoScript = '';
+    let videoScriptTitle = '';
     try {
-      videoScript = await generateVideoScript(
+      const scriptResult = await generateVideoScript(
         reportDate, 
         enriched.map(a => ({ title: a.title, summary: a.summary, url: a.url }))
       );
-      console.log(`✅ 视频口播稿生成完成 (${videoScript.length} 字)`);
+      videoScript = scriptResult.script;
+      videoScriptTitle = scriptResult.title;
+      console.log(`✅ 视频口播稿生成完成: "${videoScriptTitle}" (${videoScript.length} 字)`);
     } catch (error) {
       console.error(`⚠️  视频口播稿生成失败:`, error);
       // 失败不影响主流程
@@ -77,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       html: htmlContent,
       articleIds: articleIds,
       videoScript: videoScript,
+      videoScriptTitle: videoScriptTitle,
       publishedUrl: publishUrl || `https://github.com/${process.env.GITHUB_REPO}/blob/main/content/posts/${reportDate}.md`
     });
 
