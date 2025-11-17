@@ -136,12 +136,13 @@ export async function fetchArticlesFromSources(sources: Source[]): Promise<Artic
       console.log(`   URL: ${actualUrl}`);
       const feed = await parser.parseURL(actualUrl);
       
-      console.log(`   获取到 ${feed.items.length} 条RSS项`);
+      const recentItems = feed.items.slice(0, 10);
+      console.log(`   获取到 ${feed.items.length} 条RSS项，只处理最近 ${recentItems.length} 条`);
       let todayCount = 0;
       let skippedCount = 0;
       
       // 只保留今日发布的文章
-      for (const item of feed.items) {
+      for (const item of recentItems) {
         if (!item.title || !item.link) {
           skippedCount++;
           continue;

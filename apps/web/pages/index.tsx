@@ -367,7 +367,7 @@ export default function HomePage() {
                     })
                     .map(([date, dateArticles]) => {
                       const isToday = date === new Date().toISOString().split('T')[0];
-                      const isExpanded = isToday || expandedDates.has(date);
+                      const isExpanded = expandedDates.has(date);
                       return (
                     <div key={date} className="space-y-4">
                       {/* 日期标题 - 当日不可折叠，历史可折叠 */}
