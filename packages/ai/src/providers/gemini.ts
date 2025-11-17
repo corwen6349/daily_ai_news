@@ -1,27 +1,112 @@
 import { getConfig } from '@daily-ai-news/config';
 import type { SummaryInput } from '../types';
 
-/**
- * 使用 Gemini 2.0 Flash 模型生成文章摘要
- * 参考：https://ai.google.dev/gemini-api/docs/quickstart?hl=zh-cn
- */
-export async function summarizeWithGemini(input: SummaryInput): Promise<string> {
+async function executeGeminiRequest(prompt: string, maxTokens: number): Promise<string> {
   const { geminiApiKey } = getConfig();
   
   if (!geminiApiKey) {
-    console.warn('⚠️ Gemini API key not configured');
     throw new Error('GEMINI_API_KEY 环境变量未配置');
   }
 
   // 官方推荐的最新模型列表（按优先级）
   const models = [
-    'gemini-2.5-flash',            // 最新、最快的模型 (2025-11)
-    'gemini-2.0-flash-exp',        // 实验版
-    'gemini-1.5-flash',            // 稳定版
     'gemini-1.5-flash-latest',     // 最新稳定版
-    'gemini-1.5-pro'               // 高级版本
+    'gemini-1.5-pro-latest'        // 高级版本
   ];
 
+  let lastError: Error | null = null;
+
+  for (const model of models) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30秒超时
+
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      console.log(`🔄 尝试 Gemini 模型: ${model}`);
+      
+      const response = await fetch(`${endpoint}?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: maxTokens,
+            topP: 0.95,
+            topK: 40
+          },
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+          ]
+        })
+      });
+      
+      clearTimeout(timeout);
+      const responseText = await response.text();
+
+      if (!response.ok) {
+        const errorMsg = `HTTP ${response.status}: ${responseText.substring(0, 200)}`;
+        console.error(`❌ ${model} 失败:`, errorMsg);
+        lastError = new Error(errorMsg);
+        continue;
+      }
+
+      const data = JSON.parse(responseText);
+      
+      if (data.promptFeedback?.blockReason) {
+        const blockReason = data.promptFeedback.blockReason;
+        console.warn(`⚠️ ${model} 被安全过滤器阻止: ${blockReason}`);
+        lastError = new Error(`Content blocked: ${blockReason}`);
+        continue;
+      }
+
+      const candidate = data.candidates?.[0];
+      const content = candidate?.content?.parts?.[0]?.text;
+      
+      if (!content || content.trim().length < 20) {
+        console.warn(`⚠️ ${model} 返回空内容或内容过短`);
+        lastError = new Error('Empty or too short content returned');
+        continue;
+      }
+
+      const finishReason = candidate?.finishReason;
+      if (finishReason && finishReason !== 'STOP') {
+        console.warn(`⚠️ ${model} 未正常完成: ${finishReason}`);
+        lastError = new Error(`Incomplete generation: ${finishReason}`);
+        continue;
+      }
+
+      console.log(`✅ Gemini (${model}) 生成成功: ${content.substring(0, 50)}...`);
+      return content.trim();
+
+    } catch (fetchError) {
+      clearTimeout(timeout);
+      const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+      if (errorMsg.includes('aborted')) {
+        console.error(`❌ ${model} 调用超时`);
+        lastError = new Error(`Request timed out for model ${model}`);
+      } else {
+        console.error(`❌ ${model} 调用异常:`, errorMsg);
+        lastError = fetchError as Error;
+      }
+      continue;
+    }
+  }
+
+  const finalError = lastError || new Error('所有 Gemini 模型都不可用');
+  console.error('❌ Gemini API 完全失败:', finalError.message);
+  throw finalError;
+}
+
+
+/**
+ * 使用 Gemini 模型生成文章摘要
+ */
+export async function summarizeWithGemini(input: SummaryInput): Promise<string> {
   const prompt = `请将以下 AI 资讯改写成一篇专业的科技报道（200-300字）：
 
 **标题：** ${input.title}
@@ -29,7 +114,7 @@ export async function summarizeWithGemini(input: SummaryInput): Promise<string> 
 **原文链接：** ${input.url}
 
 **内容：**
-${input.content.substring(0, 2000)}
+${input.content.substring(0, 3000)}
 
 **写作要求：**
 0. **重要：如果以上内容是英文，必须先将其翻译成中文，再按下面要求改写**
@@ -57,115 +142,14 @@ ${input.content.substring(0, 2000)}
 
 直接输出报道内容，不要标题或额外说明。`;
 
-  let lastError: Error | null = null;
+  return executeGeminiRequest(prompt, 800);
+}
 
-  // 按优先级尝试不同模型
-  for (const model of models) {
-    try {
-      // 官方 REST API 端点格式
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-      
-      console.log(`🔄 尝试 Gemini 模型: ${model}`);
-      
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000); // 30秒超时
-      
-      try {
-        const response = await fetch(`${endpoint}?key=${geminiApiKey}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          signal: controller.signal,
-          body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 800,
-            topP: 0.95,
-            topK: 40
-          },
-          safetySettings: [
-            {
-              category: 'HARM_CATEGORY_HARASSMENT',
-              threshold: 'BLOCK_ONLY_HIGH'
-            },
-            {
-              category: 'HARM_CATEGORY_HATE_SPEECH',
-              threshold: 'BLOCK_ONLY_HIGH'
-            },
-            {
-              category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-              threshold: 'BLOCK_ONLY_HIGH'
-            },
-            {
-              category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-              threshold: 'BLOCK_ONLY_HIGH'
-            }
-          ]
-        })
-      });
-      
-      clearTimeout(timeout);
-
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        const errorMsg = `HTTP ${response.status}: ${responseText.substring(0, 200)}`;
-        console.error(`❌ ${model} 失败:`, errorMsg);
-        lastError = new Error(errorMsg);
-        continue; // 尝试下一个模型
-      }
-
-      const data = JSON.parse(responseText);
-      
-      // 检查是否被安全过滤器阻止
-      if (data.promptFeedback?.blockReason) {
-        console.warn(`⚠️ ${model} 被安全过滤器阻止: ${data.promptFeedback.blockReason}`);
-        lastError = new Error(`Content blocked: ${data.promptFeedback.blockReason}`);
-        continue;
-      }
-
-      // 提取生成的文本
-      const candidate = data.candidates?.[0];
-      const summary = candidate?.content?.parts?.[0]?.text;
-      
-      if (!summary || summary.trim().length < 20) {
-        console.warn(`⚠️ ${model} 返回空摘要或内容过短`);
-        continue;
-      }
-
-      // 检查完成原因
-      const finishReason = candidate?.finishReason;
-      if (finishReason === 'SAFETY' || finishReason === 'RECITATION') {
-        console.warn(`⚠️ ${model} 被阻止: ${finishReason}`);
-        continue;
-      }
-
-      console.log(`✅ Gemini (${model}) 总结成功: ${summary.substring(0, 50)}...`);
-      return summary.trim();
-
-      } catch (fetchError) {
-        clearTimeout(timeout);
-        const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
-        console.error(`❌ ${model} 调用异常:`, errorMsg);
-        lastError = fetchError as Error;
-        continue;
-      }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`❌ ${model} 处理异常:`, errorMsg);
-      lastError = error as Error;
-      continue;
-    }
-  }
-
-  // 所有模型都失败，抛出详细错误
-  const finalError = lastError || new Error('所有 Gemini 模型都不可用');
-  console.error('❌ Gemini API 完全失败:', finalError.message);
-  throw finalError;
+/**
+ * 使用 Gemini 模型生成视频口播稿
+ */
+export async function generateVideoScriptWithGemini(prompt: string): Promise<string> {
+  const systemInstruction = '你是一位专业的短视频内容创作者，擅长撰写完整、简洁有力、节奏明快的口播稿。每个口播稿都必须有开头、中间、结尾，内容完整。';
+  const fullPrompt = `${systemInstruction}\n\n${prompt}`;
+  return executeGeminiRequest(fullPrompt, 1200);
 }
