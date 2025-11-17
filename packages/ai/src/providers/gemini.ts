@@ -10,8 +10,8 @@ async function executeGeminiRequest(prompt: string, maxTokens: number): Promise<
 
   // 官方推荐的最新模型列表（按优先级）
   const models = [
-    'gemini-1.5-flash-latest',     // 最新稳定版
-    'gemini-1.5-pro-latest'        // 高级版本
+    'gemini-1.5-flash', // 替代 -latest
+    'gemini-1.5-pro'    // 替代 -latest
   ];
 
   let lastError: Error | null = null;
