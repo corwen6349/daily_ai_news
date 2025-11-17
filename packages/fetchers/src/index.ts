@@ -5,7 +5,8 @@ import { Source, Article } from '@daily-ai-news/db';
 const parser = new Parser<{ link?: string; contentSnippet?: string; isoDate?: string }>({
   timeout: 10000, // 10秒超时
   headers: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    'Accept': 'application/xml, text/xml, application/rss+xml, */*',
   }
 });
 
