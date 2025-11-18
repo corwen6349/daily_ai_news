@@ -119,21 +119,40 @@ function isWithinLast12Hours(dateString: string | undefined): boolean {
   return articleDate >= twelveHoursAgo;
 }
 
-export async function fetchArticlesFromSources(sources: Source[]): Promise<Article[]> {
-  const articles: Article[] = [];
-  const today = new Date().toISOString().split('T')[0];
+import { fetchTweets } from './twitter';
 
-  console.log(`\n📅 开始抓取 ${today} 的资讯...\n`);
+export async function fetchAllArticles(sources: Source[]): Promise<Article[]> {
+  console.log(`\n📅 开始抓取资讯...\n`);
+
+  const rssArticlesPromise = fetchArticlesFromRss(sources);
+  const tweetArticlesPromise = fetchTweets();
+
+  const [rssArticles, tweetArticles] = await Promise.all([
+    rssArticlesPromise,
+    tweetArticlesPromise,
+  ]);
+
+  const allArticles = [...rssArticles, ...tweetArticles];
+  
+  console.log(`\n🎉 总共抓取到 ${allArticles.length} 篇资讯 (${rssArticles.length} 篇来自 RSS, ${tweetArticles.length} 篇来自 Twitter)\n`);
+  return allArticles;
+}
+
+// 保持原函数名为 fetchArticlesFromRss，但不再导出
+async function fetchArticlesFromRss(sources: Source[]): Promise<Article[]> {
+  const articles: Article[] = [];
+  
+  console.log(`\n📡 开始抓取 RSS 源...`);
 
   for (const source of sources) {
     try {
       const actualUrl = convertRssHubUrl(source.url);
-      console.log(`\n📡 正在抓取: ${source.name}`);
-      console.log(`   URL: ${actualUrl}`);
+      console.log(`\n  正在抓取: ${source.name}`);
+      console.log(`    URL: ${actualUrl}`);
       const feed = await parser.parseURL(actualUrl);
       
       const recentItems = feed.items.slice(0, 10);
-      console.log(`   获取到 ${feed.items.length} 条RSS项，只处理最近 ${recentItems.length} 条`);
+      console.log(`    获取到 ${feed.items.length} 条RSS项，只处理最近 ${recentItems.length} 条`);
       let todayCount = 0;
       let skippedCount = 0;
       
@@ -148,12 +167,12 @@ export async function fetchArticlesFromSources(sources: Source[]): Promise<Artic
         if (!isWithinLast12Hours(item.isoDate)) {
           skippedCount++;
           const pubDate = item.isoDate ? new Date(item.isoDate).toLocaleString('zh-CN') : '无日期';
-          console.log(`    ⏭️  跳过12小时前的文章: ${item.title.substring(0, 30)}... (${pubDate})`);
+          console.log(`      ⏭️  跳过12小时前的文章: ${item.title.substring(0, 30)}... (${pubDate})`);
           continue;
         }
         
         todayCount++;
-        console.log(`    ✅ [${todayCount}] ${item.title}`);
+        console.log(`      ✅ [${todayCount}] ${item.title}`);
         
         // 提取图片（异步）
         const images = await extractImagesFromUrl(item.link);
@@ -170,15 +189,14 @@ export async function fetchArticlesFromSources(sources: Source[]): Promise<Artic
         });
       }
       
-      console.log(`   📊 ${source.name}: 保留 ${todayCount} 篇，跳过 ${skippedCount} 篇`);
+      console.log(`    📊 ${source.name}: 保留 ${todayCount} 篇，跳过 ${skippedCount} 篇`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorCode = (error as any)?.code;
-      console.warn(`❌ 抓取源 ${source.name} 失败 [${errorCode || 'UNKNOWN'}]: ${errorMessage}`);
+      console.warn(`  ❌ 抓取源 ${source.name} 失败 [${errorCode || 'UNKNOWN'}]: ${errorMessage}`);
       // 继续处理其他源，不中断
     }
   }
-
-  console.log(`\n🎉 总共抓取到 ${articles.length} 篇今日资讯\n`);
   return articles;
 }
+

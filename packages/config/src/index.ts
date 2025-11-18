@@ -9,6 +9,7 @@ export interface Config {
   githubToken?: string;
   githubRepo?: string;
   githubBranch?: string;
+  twitterAuthors?: string[];
 }
 
 export function getConfig(): Config {
@@ -20,7 +21,8 @@ export function getConfig(): Config {
     deepseekApiKey: process.env.DEEPSEEK_API_KEY,
     githubToken: process.env.GITHUB_TOKEN,
     githubRepo: process.env.GITHUB_REPO,
-    githubBranch: process.env.GITHUB_BRANCH || 'main'
+    githubBranch: process.env.GITHUB_BRANCH || 'main',
+    twitterAuthors: process.env.TWITTER_AUTHORS?.split(',').map(s => s.trim()).filter(Boolean) ?? [],
   };
 }
 

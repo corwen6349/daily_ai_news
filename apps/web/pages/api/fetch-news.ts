@@ -1,6 +1,6 @@
 ﻿import type { NextApiRequest, NextApiResponse } from 'next';
 import { listSources, deleteTodayArticles } from '@daily-ai-news/db';
-import { fetchArticlesFromSources } from '@daily-ai-news/fetchers';
+import { fetchAllArticles } from '@daily-ai-news/fetchers';
 import { storeArticles } from '@daily-ai-news/db';
 
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
@@ -19,8 +19,8 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
       return res.status(200).json({ success: true, count: 0, message: 'No sources configured' });
     }
     
-    console.log('Fetching articles from sources...');
-    const articles = await fetchArticlesFromSources(sources);
+    console.log('Fetching articles from all sources (RSS + Twitter)...');
+    const articles = await fetchAllArticles(sources);
     console.log(`Fetched ${articles.length} articles`);
     
     if (articles.length === 0) {
