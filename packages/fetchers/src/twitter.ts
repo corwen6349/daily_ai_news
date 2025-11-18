@@ -1,36 +1,44 @@
-import { Article } from '@daily-ai-news/db';
-import { getConfig } from '@daily-ai-news/config';
+import { Article, Source } from '@daily-ai-news/db';
 import * as cheerio from 'cheerio';
 
 const NITTER_INSTANCE = 'https://nitter.net';
 
 /**
- * Fetches recent tweets for a list of authors from Nitter.
+ * Fetches recent tweets for a list of sources from Nitter.
+ * @param sources List of sources to fetch tweets from.
  * @returns A promise that resolves to an array of articles.
  */
-export async function fetchTweets(): Promise<Article[]> {
-  const { twitterAuthors } = getConfig();
-  if (!twitterAuthors || twitterAuthors.length === 0) {
-    console.log('No Twitter authors configured, skipping tweet fetch.');
+export async function fetchTweets(sources: Source[]): Promise<Article[]> {
+  if (!sources || sources.length === 0) {
+    console.log('No Twitter sources configured, skipping tweet fetch.');
     return [];
   }
 
-  console.log(`Fetching tweets for: ${twitterAuthors.join(', ')}`);
+  console.log(`Fetching tweets for ${sources.length} sources...`);
   const allTweets: Article[] = [];
 
-  for (const author of twitterAuthors) {
+  for (const source of sources) {
     try {
-      const tweets = await fetchTweetsForAuthor(author);
+      // Extract username from URL (e.g., https://nitter.net/username -> username)
+      const urlObj = new URL(source.url);
+      const author = urlObj.pathname.replace(/^\//, '');
+      
+      if (!author) {
+        console.warn(`Invalid Twitter source URL: ${source.url}`);
+        continue;
+      }
+
+      const tweets = await fetchTweetsForAuthor(author, source.id);
       allTweets.push(...tweets);
     } catch (error) {
-      console.error(`Failed to fetch tweets for ${author}:`, error);
+      console.error(`Failed to fetch tweets for ${source.name}:`, error);
     }
   }
 
   return allTweets;
 }
 
-async function fetchTweetsForAuthor(author: string): Promise<Article[]> {
+async function fetchTweetsForAuthor(author: string, sourceId: string): Promise<Article[]> {
   const url = `${NITTER_INSTANCE}/${author}`;
   console.log(`Fetching from: ${url}`);
 
@@ -75,7 +83,7 @@ async function fetchTweetsForAuthor(author: string): Promise<Article[]> {
 
     if (tweetDate > twelveHoursAgo) {
       articles.push({
-        source_id: `twitter:${author}`,
+        source_id: sourceId,
         title: `${author} on X: "${tweetContent.substring(0, 50)}..."`,
         url: tweetUrl,
         content: tweetContent,

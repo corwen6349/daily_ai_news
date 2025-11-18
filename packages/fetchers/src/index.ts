@@ -124,8 +124,12 @@ import { fetchTweets } from './twitter';
 export async function fetchAllArticles(sources: Source[]): Promise<Article[]> {
   console.log(`\n📅 开始抓取资讯...\n`);
 
-  const rssArticlesPromise = fetchArticlesFromRss(sources);
-  const tweetArticlesPromise = fetchTweets();
+  // 分离 RSS 源和 Twitter 源
+  const rssSources = sources.filter(s => !s.url.includes('nitter.net'));
+  const twitterSources = sources.filter(s => s.url.includes('nitter.net'));
+
+  const rssArticlesPromise = fetchArticlesFromRss(rssSources);
+  const tweetArticlesPromise = fetchTweets(twitterSources);
 
   const [rssArticles, tweetArticles] = await Promise.all([
     rssArticlesPromise,
