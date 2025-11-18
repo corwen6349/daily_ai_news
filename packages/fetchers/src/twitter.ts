@@ -1,7 +1,8 @@
 import { Article, Source } from '@daily-ai-news/db';
 import * as cheerio from 'cheerio';
 
-const NITTER_INSTANCE = 'https://nitter.net';
+// Remove hardcoded instance
+// const NITTER_INSTANCE = 'https://nitter.net';
 
 /**
  * Fetches recent tweets for a list of sources from Nitter.
@@ -19,16 +20,18 @@ export async function fetchTweets(sources: Source[]): Promise<Article[]> {
 
   for (const source of sources) {
     try {
-      // Extract username from URL (e.g., https://nitter.net/username -> username)
+      // Extract username and base URL from source URL
       const urlObj = new URL(source.url);
-      const author = urlObj.pathname.replace(/^\//, '');
+      // Remove leading slash and potential trailing slash
+      const author = urlObj.pathname.replace(/^\/|\/$/g, '');
+      const baseUrl = urlObj.origin;
       
       if (!author) {
         console.warn(`Invalid Twitter source URL: ${source.url}`);
         continue;
       }
 
-      const tweets = await fetchTweetsForAuthor(author, source.id);
+      const tweets = await fetchTweetsForAuthor(author, source.id, baseUrl);
       allTweets.push(...tweets);
     } catch (error) {
       console.error(`Failed to fetch tweets for ${source.name}:`, error);
@@ -38,8 +41,8 @@ export async function fetchTweets(sources: Source[]): Promise<Article[]> {
   return allTweets;
 }
 
-async function fetchTweetsForAuthor(author: string, sourceId: string): Promise<Article[]> {
-  const url = `${NITTER_INSTANCE}/${author}`;
+async function fetchTweetsForAuthor(author: string, sourceId: string, baseUrl: string): Promise<Article[]> {
+  const url = `${baseUrl}/${author}`;
   console.log(`Fetching from: ${url}`);
 
   const response = await fetch(url, {
@@ -70,7 +73,7 @@ async function fetchTweetsForAuthor(author: string, sourceId: string): Promise<A
     }
 
     const tweetLink = tweet.find('a.tweet-link')?.attr('href');
-    const tweetUrl = `${NITTER_INSTANCE}${tweetLink}`;
+    const tweetUrl = `${baseUrl}${tweetLink}`;
     const tweetContent = tweet.find('.tweet-content').text().trim();
     const tweetDateStr = tweet.find('.tweet-date a').attr('title');
 
