@@ -1,8 +1,14 @@
 import { Article, Source } from '@daily-ai-news/db';
-import * as cheerio from 'cheerio';
+import Parser from 'rss-parser';
 
-// Remove hardcoded instance
-// const NITTER_INSTANCE = 'https://nitter.net';
+// Initialize RSS parser with timeout and headers
+const parser = new Parser({
+  timeout: 30000, // 30 seconds timeout
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8',
+  }
+});
 
 /**
  * Fetches recent tweets for a list of sources from Nitter.
@@ -42,59 +48,44 @@ export async function fetchTweets(sources: Source[]): Promise<Article[]> {
 }
 
 async function fetchTweetsForAuthor(author: string, sourceId: string, baseUrl: string): Promise<Article[]> {
-  const url = `${baseUrl}/${author}`;
-  console.log(`Fetching from: ${url}`);
+  // Use RSS feed instead of HTML scraping
+  const rssUrl = `${baseUrl}/${author}/rss`;
+  console.log(`Fetching RSS from: ${rssUrl}`);
 
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9',
+  try {
+    const feed = await parser.parseURL(rssUrl);
+    const articles: Article[] = [];
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+
+    if (!feed.items) {
+      return [];
     }
-  });
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+    for (const item of feed.items) {
+      // Skip if no date or content
+      if (!item.isoDate || !item.content) continue;
+
+      const tweetDate = new Date(item.isoDate);
+
+      // Check if within last 12 hours
+      if (tweetDate > twelveHoursAgo) {
+        // Nitter RSS titles are usually the tweet content
+        const title = item.title || `${author} on X`;
+        
+        articles.push({
+          source_id: sourceId,
+          title: `${author}: ${title.substring(0, 50)}...`,
+          url: item.link || '',
+          content: item.contentSnippet || item.content || '',
+          published_at: tweetDate.toISOString(),
+        });
+      }
+    }
+
+    console.log(`Found ${articles.length} recent tweets for ${author} via RSS.`);
+    return articles.slice(0, 10);
+
+  } catch (error: any) {
+    throw new Error(`Failed to fetch RSS ${rssUrl}: ${error.message}`);
   }
-
-  const html = await response.text();
-  const $ = cheerio.load(html);
-  const articles: Article[] = [];
-  const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
-
-  $('.timeline-item').each((i, el) => {
-    const tweet = $(el);
-
-    // Skip retweets and replies
-    const isRetweet = tweet.find('.retweet-header').length > 0;
-    const isReply = tweet.find('.replying-to').length > 0;
-    if (isRetweet || isReply) {
-      return;
-    }
-
-    const tweetLink = tweet.find('a.tweet-link')?.attr('href');
-    const tweetUrl = `${baseUrl}${tweetLink}`;
-    const tweetContent = tweet.find('.tweet-content').text().trim();
-    const tweetDateStr = tweet.find('.tweet-date a').attr('title');
-
-    if (!tweetDateStr || !tweetContent || !tweetUrl) {
-      return;
-    }
-
-    // Example date format: "Nov 19, 2025 · 10:00 AM UTC"
-    const tweetDate = new Date(tweetDateStr.replace('·', '').trim());
-
-    if (tweetDate > twelveHoursAgo) {
-      articles.push({
-        source_id: sourceId,
-        title: `${author} on X: "${tweetContent.substring(0, 50)}..."`,
-        url: tweetUrl,
-        content: tweetContent,
-        published_at: tweetDate.toISOString(),
-      });
-    }
-  });
-
-  console.log(`Found ${articles.length} recent original tweets for ${author}.`);
-  return articles.slice(0, 10); // Limit to 10 per author for now
 }
