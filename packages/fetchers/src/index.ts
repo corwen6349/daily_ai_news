@@ -120,25 +120,29 @@ function isWithinLast12Hours(dateString: string | undefined): boolean {
 }
 
 import { fetchTweets } from './twitter';
+import { fetchFolo } from './folo';
 
 export async function fetchAllArticles(sources: Source[]): Promise<Article[]> {
   console.log(`\n📅 开始抓取资讯...\n`);
 
-  // 分离 RSS 源和 Twitter 源
-  const rssSources = sources.filter(s => !s.url.includes('nitter.net'));
+  // 分离 RSS 源、Twitter 源和 Folo 源
   const twitterSources = sources.filter(s => s.url.includes('nitter.net'));
+  const foloSources = sources.filter(s => s.url.includes('app.folo.is'));
+  const rssSources = sources.filter(s => !s.url.includes('nitter.net') && !s.url.includes('app.folo.is'));
 
   const rssArticlesPromise = fetchArticlesFromRss(rssSources);
   const tweetArticlesPromise = fetchTweets(twitterSources);
+  const foloArticlesPromise = fetchFolo(foloSources);
 
-  const [rssArticles, tweetArticles] = await Promise.all([
+  const [rssArticles, tweetArticles, foloArticles] = await Promise.all([
     rssArticlesPromise,
     tweetArticlesPromise,
+    foloArticlesPromise,
   ]);
 
-  const allArticles = [...rssArticles, ...tweetArticles];
+  const allArticles = [...rssArticles, ...tweetArticles, ...foloArticles];
   
-  console.log(`\n🎉 总共抓取到 ${allArticles.length} 篇资讯 (${rssArticles.length} 篇来自 RSS, ${tweetArticles.length} 篇来自 Twitter)\n`);
+  console.log(`\n🎉 总共抓取到 ${allArticles.length} 篇资讯 (${rssArticles.length} 篇来自 RSS, ${tweetArticles.length} 篇来自 Twitter, ${foloArticles.length} 篇来自 Folo)\n`);
   return allArticles;
 }
 
