@@ -127,8 +127,13 @@ export async function generateVideoScriptWithDeepSeek(prompt: string): Promise<s
   const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
   const script = data?.choices?.[0]?.message?.content;
 
-  if (!script || script.trim().length < 50) {
-    throw new Error('DeepSeek returned an empty or too short video script.');
+  // Allow shorter scripts for titles (sometimes titles are short)
+  if (!script || script.trim().length < 5) {
+    console.warn('DeepSeek returned a very short script/title:', script);
+    // If it's completely empty, throw error, otherwise return it (it might be just a short title)
+    if (!script || script.trim().length === 0) {
+        throw new Error('DeepSeek returned an empty video script.');
+    }
   }
 
   return script;
