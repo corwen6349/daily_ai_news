@@ -23,16 +23,26 @@ export async function fetchFolo(sources: Source[]): Promise<Article[]> {
 }
 
 async function fetchFoloFeed(source: Source): Promise<Article[]> {
-  console.log(`Fetching Folo from: ${source.url}`);
+  let fetchUrl = source.url;
 
-  const response = await fetch(source.url, {
+  // Handle timeline URLs by converting them to share URLs
+  // Example: https://app.folo.is/timeline/articles/56446234310693888/pending
+  const timelineMatch = source.url.match(/app\.folo\.is\/timeline\/articles\/(\d+)/);
+  if (timelineMatch && timelineMatch[1]) {
+    fetchUrl = `https://app.folo.is/share/feeds/${timelineMatch[1]}`;
+    console.log(`Converted timeline URL to share URL: ${fetchUrl}`);
+  }
+
+  console.log(`Fetching Folo from: ${fetchUrl}`);
+
+  const response = await fetch(fetchUrl, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${source.url}: ${response.statusText}`);
+    throw new Error(`Failed to fetch ${fetchUrl}: ${response.statusText}`);
   }
 
   const html = await response.text();
