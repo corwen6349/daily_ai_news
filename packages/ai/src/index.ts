@@ -1,5 +1,5 @@
 import { generateVideoScriptWithGemini, summarizeWithGemini } from './providers/gemini';
-import { generateVideoScriptWithDeepSeek, summarizeWithDeepSeek } from './providers/deepseek';
+import { generateVideoScriptWithDeepSeek, summarizeWithDeepSeek, translateTextWithDeepSeek } from './providers/deepseek';
 import { SummaryInput } from './types';
 import { getConfig } from '@daily-ai-news/config';
 
@@ -104,6 +104,16 @@ ${articlesContent}
   } catch (error) {
     console.error('Video script generation failed:', error);
     throw error; // Re-throw the error to be handled by the caller
+  }
+}
+
+export async function translateText(text: string): Promise<string> {
+  // Currently only using DeepSeek for translation as it is cheaper/better for this
+  try {
+    return await translateTextWithDeepSeek(text);
+  } catch (error) {
+    console.warn('Translation failed:', error);
+    return text; // Fallback to original text
   }
 }
 

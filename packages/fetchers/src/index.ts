@@ -121,6 +121,17 @@ function isWithinLast12Hours(dateString: string | undefined): boolean {
 
 import { fetchTweets } from './twitter';
 import { fetchFolo } from './folo';
+import { translateText } from '@daily-ai-news/ai';
+
+// Simple heuristic to check if text is English
+function isEnglish(text: string): boolean {
+  if (!text) return false;
+  const sample = text.substring(0, 100);
+  // Count English letters
+  const englishChars = sample.match(/[a-zA-Z]/g)?.length || 0;
+  // If more than 40% of characters are English letters, assume it's English
+  return englishChars > sample.length * 0.4;
+}
 
 export async function fetchAllArticles(sources: Source[]): Promise<Article[]> {
   console.log(`\n📅 开始抓取资讯...\n`);
@@ -140,10 +151,51 @@ export async function fetchAllArticles(sources: Source[]): Promise<Article[]> {
     foloArticlesPromise,
   ]);
 
-  const allArticles = [...rssArticles, ...tweetArticles, ...foloArticles];
+  let allArticles = [...rssArticles, ...tweetArticles, ...foloArticles];
   
-  console.log(`\n🎉 总共抓取到 ${allArticles.length} 篇资讯 (${rssArticles.length} 篇来自 RSS, ${tweetArticles.length} 篇来自 Twitter, ${foloArticles.length} 篇来自 Folo)\n`);
-  return allArticles;
+  // Translate English articles
+  console.log(`\n🌍 正在检查并翻译英文资讯 (共 ${allArticles.length} 篇)...`);
+  
+  // Process in chunks to avoid rate limits
+  const chunkSize = 5;
+  const processedArticles: Article[] = [];
+  
+  for (let i = 0; i < allArticles.length; i += chunkSize) {
+    const chunk = allArticles.slice(i, i + chunkSize);
+    const chunkPromises = chunk.map(async (article) => {
+      try {
+        // Check title
+        if (isEnglish(article.title)) {
+          console.log(`  Translating title: ${article.title.substring(0, 30)}...`);
+          const translatedTitle = await translateText(article.title);
+          // Append translation to title
+          article.title = `${article.title} (${translatedTitle})`;
+          
+          // Check summary/content
+          const contentToTranslate = article.summary || article.content;
+          if (contentToTranslate && isEnglish(contentToTranslate)) {
+             // Only translate if it's not too long to save tokens/time, or truncate
+             const textToTranslate = contentToTranslate.substring(0, 1000);
+             const translatedContent = await translateText(textToTranslate);
+             
+             const translationBlock = `\n\n--- 中文翻译 ---\n${translatedContent}`;
+             
+             if (article.summary) article.summary += translationBlock;
+             if (article.content) article.content += translationBlock;
+          }
+        }
+      } catch (e) {
+        console.error(`  Translation failed for ${article.title.substring(0, 20)}...`, e);
+      }
+      return article;
+    });
+    
+    const processedChunk = await Promise.all(chunkPromises);
+    processedArticles.push(...processedChunk);
+  }
+  
+  console.log(`\n🎉 总共抓取到 ${processedArticles.length} 篇资讯 (${rssArticles.length} 篇来自 RSS, ${tweetArticles.length} 篇来自 Twitter, ${foloArticles.length} 篇来自 Folo)\n`);
+  return processedArticles;
 }
 
 // 保持原函数名为 fetchArticlesFromRss，但不再导出

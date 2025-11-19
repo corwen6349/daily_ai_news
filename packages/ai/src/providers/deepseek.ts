@@ -133,3 +133,47 @@ export async function generateVideoScriptWithDeepSeek(prompt: string): Promise<s
 
   return script;
 }
+
+export async function translateTextWithDeepSeek(text: string): Promise<string> {
+  const { deepseekApiKey } = getConfig();
+  
+  if (!deepseekApiKey) {
+    throw new Error('DeepSeek API key not configured');
+  }
+
+  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${deepseekApiKey}`
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        {
+          role: 'system',
+          content: '你是一个翻译引擎。如果用户输入的文本是英文，请将其翻译成中文。如果已经是中文，请原样返回。只输出翻译后的结果，不要包含任何解释或额外文本。'
+        },
+        {
+          role: 'user',
+          content: text
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.3
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`DeepSeek API error: ${response.status} ${await response.text()}`);
+  }
+
+  const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+  const translation = data?.choices?.[0]?.message?.content;
+  
+  if (!translation) {
+    return text; // Fallback to original
+  }
+  
+  return translation.trim();
+}
