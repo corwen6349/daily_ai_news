@@ -133,6 +133,49 @@ function isEnglish(text: string): boolean {
   return englishChars > sample.length * 0.4;
 }
 
+function normalizeUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    // Remove common tracking parameters
+    const paramsToRemove = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', 'gclid'];
+    paramsToRemove.forEach(param => urlObj.searchParams.delete(param));
+    // Remove trailing slash
+    let cleanUrl = urlObj.toString();
+    if (cleanUrl.endsWith('/')) {
+      cleanUrl = cleanUrl.slice(0, -1);
+    }
+    return cleanUrl;
+  } catch {
+    return url;
+  }
+}
+
+function deduplicateArticles(articles: Article[]): Article[] {
+  const seenUrls = new Set<string>();
+  const seenTitles = new Set<string>();
+  const uniqueArticles: Article[] = [];
+
+  for (const article of articles) {
+    const normalizedUrl = normalizeUrl(article.url);
+    // Use a simplified title for deduplication (ignore case, whitespace, and translation suffix)
+    const normalizedTitle = article.title.split('(')[0].toLowerCase().trim();
+
+    if (seenUrls.has(normalizedUrl)) {
+      console.log(`  ⚠️  Duplicate URL removed: ${article.title}`);
+      continue;
+    }
+    if (seenTitles.has(normalizedTitle)) {
+      console.log(`  ⚠️  Duplicate Title removed: ${article.title}`);
+      continue;
+    }
+
+    seenUrls.add(normalizedUrl);
+    seenTitles.add(normalizedTitle);
+    uniqueArticles.push(article);
+  }
+  return uniqueArticles;
+}
+
 export async function fetchAllArticles(sources: Source[]): Promise<Article[]> {
   console.log(`\n📅 开始抓取资讯...\n`);
 
@@ -152,6 +195,11 @@ export async function fetchAllArticles(sources: Source[]): Promise<Article[]> {
   ]);
 
   let allArticles = [...rssArticles, ...tweetArticles, ...foloArticles];
+  
+  // Deduplicate articles
+  console.log(`\n🧹 正在去重 (原始数量: ${allArticles.length})...`);
+  allArticles = deduplicateArticles(allArticles);
+  console.log(`✅ 去重完成 (剩余数量: ${allArticles.length})`);
   
   // Translate English articles
   console.log(`\n🌍 正在检查并翻译英文资讯 (共 ${allArticles.length} 篇)...`);
