@@ -175,6 +175,8 @@ export async function listArticles({
       url: item.link,
       summary: item.summary,
       content: item.content,
+      images: item.images || [], // Map images
+      videos: item.videos || [], // Map videos
       published_at: item.pub_date,
       created_at: item.created_at
     }));
@@ -267,6 +269,8 @@ export async function storeArticles(articles: Article[]): Promise<{ inserted: nu
     link: article.url,  // url -> link
     summary: article.summary,
     content: article.content,
+    images: article.images, // Map images
+    videos: article.videos, // Map videos
     pub_date: article.published_at,  // published_at -> pub_date
   }));
 
@@ -316,6 +320,8 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
       url: item.link,
       summary: item.summary,
       content: item.content,
+      images: item.images || [], // Map images
+      videos: item.videos || [], // Map videos
       published_at: item.pub_date,
       created_at: item.created_at
     }));
