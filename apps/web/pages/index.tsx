@@ -57,7 +57,7 @@ export default function HomePage() {
   const { data: reports = [] } = useSWR<Report[]>('/api/reports', fetcher);
   
   const articles = articlesData?.articles || [];
-  const groupedByDate = articlesData?.groupedByDate || {};
+  // const groupedByDate = articlesData?.groupedByDate || {};
   const pagination = articlesData?.pagination || { page: 1, pageSize: 50, hasMore: false };
 
   // 处理历史日报：同一日期只保留最新一条，按日期倒序
