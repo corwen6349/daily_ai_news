@@ -1,7 +1,7 @@
 import { getConfig } from '@daily-ai-news/config';
 import type { SummaryInput } from '../types';
 
-async function executeGeminiRequest(prompt: string, maxTokens: number): Promise<string> {
+async function executeGeminiRequest(prompt: string, maxTokens: number, systemInstruction?: string): Promise<string> {
   const { geminiApiKey } = getConfig();
   
   if (!geminiApiKey) {
@@ -24,25 +24,33 @@ async function executeGeminiRequest(prompt: string, maxTokens: number): Promise<
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
       console.log(`🔄 尝试 Gemini 模型: ${model}`);
       
+      const body: any = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: maxTokens,
+          topP: 0.95,
+          topK: 40
+        },
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+        ]
+      };
+
+      if (systemInstruction) {
+        body.systemInstruction = {
+          parts: [{ text: systemInstruction }]
+        };
+      }
+
       const response = await fetch(`${endpoint}?key=${geminiApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: maxTokens,
-            topP: 0.95,
-            topK: 40
-          },
-          safetySettings: [
-            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
-          ]
-        })
+        body: JSON.stringify(body)
       });
       
       clearTimeout(timeout);
@@ -107,49 +115,54 @@ async function executeGeminiRequest(prompt: string, maxTokens: number): Promise<
  * 使用 Gemini 模型生成文章摘要
  */
 export async function summarizeWithGemini(input: SummaryInput): Promise<string> {
-  const prompt = `请将以下 AI 资讯改写成一篇专业的科技报道（200-300字）：
+  const systemInstruction = `你是一位资深的科技媒体主编，擅长用通俗易懂、客观中立但又不失深度的语言报道 AI 领域的最新进展。
+你的写作风格：
+1.  **去 AI 味**：拒绝机械的翻译腔（如“首先”、“总之”、“此外”的滥用），拒绝空洞的形容词（如“革命性”、“颠覆性”）。
+2.  **人话写作**：像给朋友讲故事一样，自然流畅。多用短句，少用长难句。
+3.  **信息密度高**：直击要害，不废话。
+4.  **结构清晰**：重点突出，逻辑顺畅。
+
+你的任务是将输入的 AI 资讯改写成一篇中文科技报道。`;
+
+  const imagesContext = input.images && input.images.length > 0 
+    ? `\n**可用图片资源：**\n${input.images.map((img, i) => `[图片${i+1}]: ${img}`).join('\n')}\n请在文章合适位置插入图片，使用 Markdown 格式：![图片描述](图片链接)` 
+    : '';
+    
+  const videosContext = input.videos && input.videos.length > 0
+    ? `\n**可用视频资源：**\n${input.videos.map((vid, i) => `[视频${i+1}]: ${vid}`).join('\n')}\n请在文章合适位置插入视频链接或说明。`
+    : '';
+
+  const prompt = `请改写以下资讯：
 
 **标题：** ${input.title}
-
 **原文链接：** ${input.url}
-
 **内容：**
 ${input.content.substring(0, 3000)}
+${imagesContext}
+${videosContext}
 
-**写作要求：**
-0. **重要：如果以上内容是英文，必须先将其翻译成中文，再按下面要求改写**
-1. **开头**：一句话概括核心要点（What happened / What's new）
-2. **主体**：
-   - 详细说明技术细节、产品特点或研究成果
-   - 用具体数据或例子支撑（如：性能提升 X%、支持 Y 功能）
-   - 分析对行业/用户的实际影响
-3. **格式**：
-   - 使用 Markdown，关键词加粗（**关键词**）
-   - 如果内容涉及图片/视频/Demo，用 📊 🎬 🖼️ 等 emoji 标注
-   - 段落简洁（每段 2-3 句）
-4. **结尾**：必须添加 "📎 [查看原文](${input.url})"
+**改写要求：**
+1.  **标题优化**：请为文章拟定一个吸引人的中文标题，**长度严格控制在 25 个字以内**。标题要包含核心信息点。
+2.  **核心摘要**：文章开头直接用一句话概括“发生了什么”以及“为什么重要”。
+3.  **深度解读**：
+    *   解释技术原理或产品功能时，多用类比。
+    *   如果有具体数据（性能提升、参数量等），必须保留并加粗。
+    *   分析这对普通用户或开发者意味着什么。
+4.  **多媒体使用**：
+    *   如果提供了图片或视频资源，**必须**在文中合适的位置插入。
+    *   如果没有提供资源，不要凭空捏造。
+5.  **格式规范**：
+    *   使用 Markdown 格式。
+    *   **关键词**（如模型名称、公司名、核心数据）使用加粗。
+    *   文末必须附带：📎 [查看原文](${input.url})
+6.  **篇幅**：200-350 字。
 
-示例结构：
----
-**OpenAI 发布 GPT-5**，性能相比 GPT-4 提升 40%，推理速度快 2 倍。
+**输出格式：**
+# [这里放你拟定的标题]
 
-新模型支持 **128K 上下文长度**，可处理约 100 页文档。测试显示在数学推理、代码生成等任务上表现更优，特别是复杂问题分解能力显著增强。📊
+[这里是正文内容...]
 
-这将显著降低企业 AI 应用成本，加速多模态 AI 落地。OpenAI 计划于 12 月向 API 用户开放。
+请开始改写：`;
 
-📎 [查看原文](https://example.com)
----
-
-直接输出报道内容，不要标题或额外说明。`;
-
-  return executeGeminiRequest(prompt, 800);
-}
-
-/**
- * 使用 Gemini 模型生成视频口播稿
- */
-export async function generateVideoScriptWithGemini(prompt: string): Promise<string> {
-  const systemInstruction = '你是一位专业的短视频内容创作者，擅长撰写完整、简洁有力、节奏明快的口播稿。每个口播稿都必须有开头、中间、结尾，内容完整。';
-  const fullPrompt = `${systemInstruction}\n\n${prompt}`;
-  return executeGeminiRequest(fullPrompt, 1200);
+  return executeGeminiRequest(prompt, 1000, systemInstruction);
 }

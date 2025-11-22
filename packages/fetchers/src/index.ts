@@ -103,8 +103,8 @@ export async function testRssSource(url: string): Promise<{ success: boolean; er
   }
 }
 
-// 检查文章是否在过去12小时内发布
-function isWithinLast12Hours(dateString: string | undefined): boolean {
+// 检查文章是否在过去24小时内发布
+function isWithinLast24Hours(dateString: string | undefined): boolean {
   if (!dateString) {
     // 如果没有日期，跳过
     console.log('    ⚠️  无日期信息，跳过');
@@ -113,10 +113,10 @@ function isWithinLast12Hours(dateString: string | undefined): boolean {
   
   const articleDate = new Date(dateString);
   const now = new Date();
-  const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000); // 12小时前的时间点
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24小时前的时间点
 
-  // 检查文章发布日期是否在12小时内
-  return articleDate >= twelveHoursAgo;
+  // 检查文章发布日期是否在24小时内
+  return articleDate >= twentyFourHoursAgo;
 }
 
 import { fetchTweets } from './twitter';
@@ -264,18 +264,18 @@ async function fetchArticlesFromRss(sources: Source[]): Promise<Article[]> {
       let todayCount = 0;
       let skippedCount = 0;
       
-      // 只保留过去12小时内发布的文章
+      // 只保留过去24小时内发布的文章
       for (const item of recentItems) {
         if (!item.title || !item.link) {
           skippedCount++;
           continue;
         }
         
-        // 检查是否在过去12小时内
-        if (!isWithinLast12Hours(item.isoDate)) {
+        // 检查是否在过去24小时内
+        if (!isWithinLast24Hours(item.isoDate)) {
           skippedCount++;
           const pubDate = item.isoDate ? new Date(item.isoDate).toLocaleString('zh-CN') : '无日期';
-          console.log(`      ⏭️  跳过12小时前的文章: ${item.title.substring(0, 30)}... (${pubDate})`);
+          console.log(`      ⏭️  跳过24小时前的文章: ${item.title.substring(0, 30)}... (${pubDate})`);
           continue;
         }
         

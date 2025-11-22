@@ -1,16 +1,11 @@
 ﻿import type { NextApiRequest, NextApiResponse } from 'next';
-import { listSources, deleteTodayArticles } from '@daily-ai-news/db';
+import { listSources, deleteOldArticles } from '@daily-ai-news/db';
 import { fetchAllArticles } from '@daily-ai-news/fetchers';
 import { storeArticles } from '@daily-ai-news/db';
 
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   try {
     console.log('Starting fetch-news...');
-    
-    // 删除当日旧数据
-    console.log('Deleting today\'s old articles...');
-    const deleted = await deleteTodayArticles();
-    console.log(`Deleted ${deleted} old articles for today`);
     
     const sources = await listSources();
     console.log(`Found ${sources.length} sources`, sources);
@@ -30,12 +25,18 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
     console.log('Storing articles...');
     const result = await storeArticles(articles);
     console.log(`Stored articles:`, result);
+
+    // 删除过期数据
+    console.log('Deleting old articles...');
+    const deleted = await deleteOldArticles();
+    console.log(`Deleted ${deleted} old articles`);
     
     res.status(200).json({ 
       success: true, 
       count: articles.length,
       inserted: result.inserted,
-      updated: result.updated
+      updated: result.updated,
+      deletedOld: deleted
     });
   } catch (error) {
     console.error('Error in fetch-news:', error);

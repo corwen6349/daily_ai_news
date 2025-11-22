@@ -46,15 +46,8 @@ export default function HomePage() {
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(new Set());
   const [editingSource, setEditingSource] = useState<Source | null>(null);
   const [showSourceModal, setShowSourceModal] = useState(false);
-  const [showVideoScriptModal, setShowVideoScriptModal] = useState(false);
-  const [currentVideoScript, setCurrentVideoScript] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(50);
-  const [expandedDates, setExpandedDates] = useState<Set<string>>(() => {
-    // 默认只展开今天的日期
-    const today = new Date().toISOString().split('T')[0];
-    return new Set([today]);
-  });
   
   const { data: sources = [], mutate: mutateSources } = useSWR<Source[]>('/api/sources', fetcher);
   const { data: articlesData, mutate: mutateArticles } = useSWR<ArticlesResponse>(
@@ -91,11 +84,11 @@ export default function HomePage() {
   const handleFetchNews = async () => {
     setLoading(true);
     setLoadingType('fetch');
-    setFetchProgress('正在抓取资讯...');
+    setFetchProgress('正在获取资讯...');
     try {
       const response = await fetch('/api/fetch-news', { method: 'POST' });
       const result = await response.json();
-      setFetchProgress(`成功抓取 ${result.count} 篇资讯`);
+      setFetchProgress(`成功获取 ${result.count} 篇资讯`);
       await mutateArticles();
       // 延迟一下让用户看到成功消息，然后自动切换到资讯列表
       setTimeout(() => {
@@ -107,7 +100,7 @@ export default function HomePage() {
     } catch (error) {
       setFetchProgress('');
       setLoading(false);
-      alert('❌ 抓取失败：' + (error instanceof Error ? error.message : '未知错误'));
+      alert('❌ 获取失败：' + (error instanceof Error ? error.message : '未知错误'));
     }
   };
 
@@ -208,7 +201,7 @@ export default function HomePage() {
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mb-4"></div>
               <h3 className="text-xl font-semibold text-slate-800 mb-2">
-                {loadingType === 'fetch' ? '正在抓取资讯' : '正在生成日报'}
+                {loadingType === 'fetch' ? '正在获取资讯' : '正在生成日报'}
               </h3>
               <p className="text-slate-600 text-center">{fetchProgress || '请稍候...'}</p>
             </div>
@@ -226,13 +219,6 @@ export default function HomePage() {
               </h1>
               <p className="text-slate-600 mt-1">每日 AI 资讯聚合平台</p>
             </div>
-            <button
-              onClick={handleFetchNews}
-              disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? '⏳ 抓取中...' : '🔄 抓取资讯'}
-            </button>
           </div>
         </div>
       </header>
@@ -287,40 +273,34 @@ export default function HomePage() {
                   </button>
                 </div>
 
-                <div className="grid gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {sources.map(source => (
                     <div key={source.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-slate-50">
                       <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-slate-800">{source.name}</h3>
-                            {source.category && (
-                              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">
-                                {source.category}
-                              </span>
-                            )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-base font-semibold text-slate-800 truncate" title={source.name}>{source.name}</h3>
                           </div>
-                          <a 
-                            href={source.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm text-blue-600 hover:underline break-all"
-                          >
-                            {source.url}
-                          </a>
+                          {source.category && (
+                            <span className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full truncate max-w-full">
+                              {source.category}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 ml-2 flex-shrink-0">
                           <button
                             onClick={() => { setEditingSource(source); setShowSourceModal(true); }}
-                            className="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 rounded transition-colors"
+                            className="p-1.5 text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 rounded transition-colors"
+                            title="编辑"
                           >
-                            ✏️ 编辑
+                            ✏️
                           </button>
                           <button
                             onClick={() => handleDeleteSource(source.id)}
-                            className="px-3 py-1 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+                            className="p-1.5 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+                            title="删除"
                           >
-                            🗑️ 删除
+                            🗑️
                           </button>
                         </div>
                       </div>
@@ -337,130 +317,91 @@ export default function HomePage() {
                   <h2 className="text-xl font-semibold text-slate-800">
                     资讯列表 {selectedArticles.size > 0 && `(已选 ${selectedArticles.size} 篇)`}
                   </h2>
-                  {selectedArticles.size > 0 && (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => setSelectedArticles(new Set())}
-                        className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
-                      >
-                        取消选择
-                      </button>
-                      <button
-                        onClick={handleGenerateReport}
-                        disabled={loading}
-                        className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
-                      >
-                        {loading ? '⏳ 生成中...' : '✨ 生成日报'}
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleFetchNews}
+                      disabled={loading}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                    >
+                      {loading ? '⏳ 获取中...' : '🔄 获取资讯'}
+                    </button>
+                    {selectedArticles.size > 0 && (
+                      <>
+                        <button
+                          onClick={() => setSelectedArticles(new Set())}
+                          className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
+                        >
+                          取消选择
+                        </button>
+                        <button
+                          onClick={handleGenerateReport}
+                          disabled={loading}
+                          className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+                        >
+                          {loading ? '⏳ 生成中...' : '✨ 生成日报'}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                {/* 按日期分组显示 */}
-                <div className="space-y-8">
-                  {Object.entries(groupedByDate)
-                    .sort(([dateA], [dateB]) => {
-                      // 按日期降序排列（最新的在前）
-                      if (dateA === '未知日期') return 1;
-                      if (dateB === '未知日期') return -1;
-                      return new Date(dateB).getTime() - new Date(dateA).getTime();
-                    })
-                    .map(([date, dateArticles]) => {
-                      const isToday = date === new Date().toISOString().split('T')[0];
-                      const isExpanded = expandedDates.has(date);
-                      return (
-                    <div key={date} className="space-y-4">
-                      {/* 日期标题 - 当日不可折叠，历史可折叠 */}
-                      <div 
-                        className={`sticky top-0 z-10 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-5 py-3 rounded-lg shadow-md flex items-center justify-between transition-all ${
-                          isToday ? '' : 'cursor-pointer hover:shadow-lg'
-                        }`}
-                        onClick={() => {
-                          if (isToday) return; // 当日不可折叠
-                          const newExpanded = new Set(expandedDates);
-                          if (isExpanded) {
-                            newExpanded.delete(date);
-                          } else {
-                            newExpanded.add(date);
-                          }
-                          setExpandedDates(newExpanded);
-                        }}
-                      >
-                        <h3 className="text-lg font-bold flex items-center gap-2">
-                          {!isToday && (
-                            <span className="transition-transform" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
-                          )}
-                          <span>📅</span>
-                          <span>{date}</span>
-                          {isToday && <span className="text-xs bg-yellow-400 text-slate-800 px-2 py-0.5 rounded-full">今天</span>}
-                        </h3>
-                        <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
-                          {dateArticles.length} 篇
-                        </span>
-                      </div>
-                      
-                      {/* 该日期下的文章列表 */}
-                      {isExpanded && (
-                      <div className="space-y-3 pl-4">
-                        {dateArticles.filter(article => article.id).map(article => (
-                          <div 
-                            key={article.id}
-                            className={`border rounded-lg p-4 transition-all cursor-pointer ${
-                              selectedArticles.has(article.id!)
-                                ? 'bg-blue-50 border-blue-300 shadow-md'
-                                : 'bg-white hover:shadow-md hover:border-blue-200'
-                            }`}
-                            onClick={() => toggleArticleSelection(article.id!)}
-                          >
-                            <div className="flex items-start gap-3">
-                              <input
-                                type="checkbox"
-                                checked={selectedArticles.has(article.id!)}
-                                onChange={() => toggleArticleSelection(article.id!)}
-                                className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start gap-2 mb-2">
-                                  <h4 className="flex-1 text-base font-semibold text-slate-800 leading-snug">
-                                    <a 
-                                      href={article.url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="hover:text-blue-600 transition-colors"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      {article.title}
-                                    </a>
-                                  </h4>
-                                  {reports.some(report => report.article_ids?.includes(article.id!)) && (
-                                    <span className="flex-shrink-0 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-300">
-                                      ✓ 已生成日报
-                                    </span>
-                                  )}
-                                </div>
-                                {article.summary && (
-                                  <p className="text-slate-600 text-sm leading-relaxed mb-2 line-clamp-2">
-                                    {article.summary}
-                                  </p>
-                                )}
-                                <div className="flex items-center gap-3 text-xs text-slate-500">
-                                  <span>🔗 {sources.find(s => s.id === article.source_id)?.name || '未知来源'}</span>
-                                </div>
-                              </div>
-                            </div>
+                {/* 文章列表 */}
+                <div className="space-y-4">
+                  {articles.map(article => (
+                    <div 
+                      key={article.id}
+                      className={`border rounded-lg p-4 transition-all cursor-pointer ${
+                        selectedArticles.has(article.id!)
+                          ? 'bg-blue-50 border-blue-300 shadow-md'
+                          : 'bg-white hover:shadow-md hover:border-blue-200'
+                      }`}
+                      onClick={() => toggleArticleSelection(article.id!)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedArticles.has(article.id!)}
+                          onChange={() => toggleArticleSelection(article.id!)}
+                          className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-2 mb-2">
+                            <h4 className="flex-1 text-base font-semibold text-slate-800 leading-snug">
+                              <a 
+                                href={article.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="hover:text-blue-600 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {article.title}
+                              </a>
+                            </h4>
+                            {reports.some(report => report.article_ids?.includes(article.id!)) && (
+                              <span className="flex-shrink-0 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-300">
+                                ✓ 已生成日报
+                              </span>
+                            )}
                           </div>
-                        ))}
+                          {article.summary && (
+                            <p className="text-slate-600 text-sm leading-relaxed mb-2 line-clamp-2">
+                              {article.summary}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-3 text-xs text-slate-500">
+                            <span>🔗 {sources.find(s => s.id === article.source_id)?.name || '未知来源'}</span>
+                            <span>📅 {article.published_at ? new Date(article.published_at).toLocaleString('zh-CN') : '未知时间'}</span>
+                          </div>
+                        </div>
                       </div>
-                      )}
                     </div>
-                    );
-                  })}
+                  ))}
                   
                   {articles.length === 0 && (
                     <div className="text-center py-16 text-slate-500">
                       <div className="text-6xl mb-4">📭</div>
                       <p className="text-xl font-semibold mb-2">暂无资讯</p>
-                      <p className="text-sm">点击上方&ldquo;抓取资讯&rdquo;按钮获取最新内容</p>
+                      <p className="text-sm">点击上方&ldquo;获取资讯&rdquo;按钮获取最新内容</p>
                     </div>
                   )}
                 </div>
@@ -545,23 +486,6 @@ export default function HomePage() {
                             )}
                           </div>
                         </div>
-                        
-                        {/* 视频口播稿按钮 */}
-                        {report.video_script && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setCurrentVideoScript(report.video_script!);
-                              setShowVideoScriptModal(true);
-                            }}
-                            className="flex-shrink-0 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all flex items-center gap-2"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            查看口播稿
-                          </button>
-                        )}
                       </div>
                     </div>
                     );
@@ -638,59 +562,6 @@ export default function HomePage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Video Script Modal */}
-      {showVideoScriptModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                视频口播稿
-              </h3>
-              <button
-                onClick={() => setShowVideoScriptModal(false)}
-                className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                <pre className="whitespace-pre-wrap font-sans text-slate-800 leading-relaxed text-base">
-                  {currentVideoScript}
-                </pre>
-              </div>
-            </div>
-            
-            <div className="border-t border-slate-200 px-6 py-4 flex gap-3">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(currentVideoScript);
-                  alert('✅ 口播稿已复制到剪贴板');
-                }}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                复制口播稿
-              </button>
-              <button
-                onClick={() => setShowVideoScriptModal(false)}
-                className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
-              >
-                关闭
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -186,40 +186,37 @@ export async function listArticles({
   }
 }
 
-// 删除当日的文章（在重新抓取前清理）
-export async function deleteTodayArticles(): Promise<number> {
-  const today = new Date().toISOString().split('T')[0];
+// 删除超过24小时的文章（在抓取后清理）
+export async function deleteOldArticles(): Promise<number> {
+  const now = new Date();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   
   if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
     const beforeCount = store.articles.length;
     store.articles = store.articles.filter(article => {
-      if (!article.published_at) return true;
-      const articleDate = new Date(article.published_at).toISOString().split('T')[0];
-      return articleDate !== today;
+      if (!article.published_at) return false;
+      return article.published_at >= twentyFourHoursAgo;
     });
     const deleted = beforeCount - store.articles.length;
-    console.log(`🗑️  删除了 ${deleted} 条当日旧数据`);
+    console.log(`🗑️  删除了 ${deleted} 条过期数据`);
     return deleted;
   }
 
   try {
-    const { data, error } = await getSupabase()
+    // Delete articles older than 24 hours
+    const { count: countOld, error: errorOld } = await getSupabase()
       .from('articles')
-      .delete()
-      .gte('pub_date', `${today}T00:00:00`)
-      .lt('pub_date', `${today}T23:59:59`)
-      .select();
+      .delete({ count: 'exact' })
+      .lt('pub_date', twentyFourHoursAgo);
+      
+    if (errorOld) throw handleSupabaseError(errorOld, 'deleteOldArticles');
     
-    if (error) {
-      throw handleSupabaseError(error, 'deleteTodayArticles');
-    }
-    
-    const deleted = data?.length || 0;
-    console.log(`🗑️  删除了 ${deleted} 条当日旧数据`);
-    return deleted;
+    const totalDeleted = countOld || 0;
+    console.log(`🗑️  删除了 ${totalDeleted} 条过期数据`);
+    return totalDeleted;
   } catch (error) {
-    console.error('删除当日文章失败:', error);
+    console.error('删除过期文章失败:', error);
     return 0;
   }
 }
@@ -353,8 +350,6 @@ export async function listReports(): Promise<Report[]> {
       html: item.html_content,
       published_url: item.publish_url,
       article_ids: item.article_ids || [],
-      video_script: item.video_script,
-      video_script_title: item.video_script_title,
       created_at: item.created_at
     }));
   } catch (error) {
@@ -368,30 +363,44 @@ export async function saveReport({
   html,
   publishedUrl,
   articleIds,
-  videoScript,
-  videoScriptTitle,
 }: {
   date: string;
   html: string;
   publishedUrl?: string;
   articleIds: string[];
-  videoScript?: string;
-  videoScriptTitle?: string;
 }): Promise<Report> {
   if (!hasSupabaseConfig()) {
     const store = getMemoryStore();
+    // Check if report for this date already exists
+    const existingIndex = store.reports.findIndex(r => r.date === date);
+    
     const report: Report = {
-      id: nanoid(),
+      id: existingIndex >= 0 ? store.reports[existingIndex].id : nanoid(),
       date,
       html,
       published_url: publishedUrl,
       article_ids: articleIds,
-      video_script: videoScript,
-      video_script_title: videoScriptTitle,
       created_at: new Date().toISOString()
     };
-    store.reports.unshift(report);
+    
+    if (existingIndex >= 0) {
+      store.reports[existingIndex] = report;
+      console.log(`📝 更新了内存中的报告: ${date}`);
+    } else {
+      store.reports.unshift(report);
+      console.log(`📝 保存了新报告到内存: ${date}`);
+    }
     return report;
+  }
+
+  // Delete existing report for this date to ensure uniqueness (overwrite)
+  const { error: deleteError } = await getSupabase()
+    .from('reports')
+    .delete()
+    .eq('report_date', date);
+    
+  if (deleteError) {
+    console.warn('清理旧报告失败 (非致命):', deleteError);
   }
 
   const { data, error } = await getSupabase()
@@ -403,8 +412,6 @@ export async function saveReport({
       publish_url: publishedUrl,
       report_date: date,
       article_ids: articleIds,
-      video_script: videoScript,
-      video_script_title: videoScriptTitle,
     })
     .select()
     .single();
@@ -453,8 +460,6 @@ export async function saveReport({
     html: data.html_content,
     published_url: data.publish_url,
     article_ids: data.article_ids || [],
-    video_script: data.video_script,
-    video_script_title: data.video_script_title,
     created_at: data.created_at
   } as Report;
 }

@@ -106,13 +106,13 @@ async function fetchFoloFeed(source: Source): Promise<Article[]> {
   }
 
   const articles: Article[] = [];
-  const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   for (const entry of jsonData.entries) {
     if (!entry.publishedAt) continue;
     
     const pubDate = new Date(entry.publishedAt);
-    if (pubDate > twelveHoursAgo) {
+    if (pubDate > twentyFourHoursAgo) {
       articles.push({
         source_id: source.id,
         title: entry.title || 'No Title',

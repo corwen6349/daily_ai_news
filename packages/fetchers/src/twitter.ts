@@ -55,7 +55,7 @@ async function fetchTweetsForAuthor(author: string, sourceId: string, baseUrl: s
   try {
     const feed = await parser.parseURL(rssUrl);
     const articles: Article[] = [];
-    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     if (!feed.items) {
       return [];
@@ -67,8 +67,8 @@ async function fetchTweetsForAuthor(author: string, sourceId: string, baseUrl: s
 
       const tweetDate = new Date(item.isoDate);
 
-      // Check if within last 12 hours
-      if (tweetDate > twelveHoursAgo) {
+      // Check if within last 24 hours
+      if (tweetDate > twentyFourHoursAgo) {
         // Nitter RSS titles are usually the tweet content
         const title = item.title || `${author} on X`;
         

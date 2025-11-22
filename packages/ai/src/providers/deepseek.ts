@@ -8,6 +8,14 @@ export async function summarizeWithDeepSeek(input: SummaryInput): Promise<string
     throw new Error('DeepSeek API key not configured');
   }
 
+  const imagesContext = input.images && input.images.length > 0 
+    ? `\n**可用图片资源：**\n${input.images.map((img, i) => `[图片${i+1}]: ${img}`).join('\n')}\n请在文章合适位置插入图片，使用 Markdown 格式：![图片描述](图片链接)` 
+    : '';
+
+  const videosContext = input.videos && input.videos.length > 0
+    ? `\n**可用视频资源：**\n${input.videos.map((vid, i) => `[视频${i+1}]: ${vid}`).join('\n')}\n请在文章合适位置插入视频链接或说明。`
+    : '';
+
   const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -36,45 +44,36 @@ export async function summarizeWithDeepSeek(input: SummaryInput): Promise<string
         },
         {
           role: 'user',
-          content: `请将以下 AI 资讯改写成一篇专业的科技报道（450-600字）：
+          content: `请将以下 AI 资讯改写成一篇专业的科技报道（200-350字）：
 
 **标题：** ${input.title}
-
+**原文链接：** ${input.url}
 **内容：**
 ${input.content.substring(0, 3000)}
+${imagesContext}
+${videosContext}
 
 **必须遵守的要求：**
 
-1. **第一段（约 120-150 字）**：
-   - 如果内容是英文，先翻译成中文
-   - 用 3-4 句话概括核心要点
-   - 回答 What/Why/When
-   - 必须有引人入胜的开头
-
-2. **第二段（约 230-300 字）**：
-   - 展开说明技术细节、产品特点或具体内容
-   - 列举 2-3 个关键点（可使用加粗或列表）
-   - 如有多媒体内容，用 emoji 标注
-   - 内容必须充实、具体，提供足够细节
-
-3. **第三段（约 130-170 字）**：
-   - 分析对行业的影响或意义
-   - 展望未来发展趋势
-   - 必须有总结性的结尾句
-   - 给读者完整的阅读体验
-
+1. **标题优化**：请为文章拟定一个吸引人的中文标题，**长度严格控制在 25 个字以内**。标题要包含核心信息点。
+2. **内容结构**：
+   - **第一段**：用一句话概括核心要点（What/Why）。
+   - **第二段**：展开说明技术细节、产品特点，列举关键数据（加粗）。
+   - **第三段**：分析影响或意义。
+3. **多媒体使用**：
+   - 如果提供了图片或视频资源，**必须**在文中合适的位置插入。
+   - 如果没有提供资源，不要凭空捏造。
 4. **格式要求**：
    - 使用 Markdown 格式
    - 关键词用粗体标注
-   - 段落之间用空行分隔
-   - 总字数：450-600 字
+   - 文末必须附带：📎 [查看原文](${input.url})
 
-5. **绝对禁止**：
-   - 不能中途截断，必须写完第三段
-   - 不能使用 "……" 或 "等等" 结尾
-   - 最后一句必须是完整的总结
+**输出格式：**
+# [这里放你拟定的标题]
 
-直接输出报道内容，不要添加标题或额外说明。现在开始生成完整的三段内容：`
+[这里是正文内容...]
+
+直接输出报道内容，不要添加额外说明。`
         }
       ],
       max_tokens: 2000,
@@ -94,49 +93,6 @@ ${input.content.substring(0, 3000)}
   }
   
   return summary;
-}
-
-export async function generateVideoScriptWithDeepSeek(prompt: string): Promise<string> {
-  const { deepseekApiKey } = getConfig();
-  
-  if (!deepseekApiKey) {
-    throw new Error('DeepSeek API key not configured');
-  }
-  
-  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${deepseekApiKey}`
-    },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      messages: [
-        { role: 'system', content: '你是一位专业的短视频内容创作者，擅长撰写完整、简洁有力、节奏明快的口播稿。每个口播稿都必须有开头、中间、结尾，内容完整。' },
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: 1200,
-      temperature: 0.8
-    })
-  });
-  
-  if (!response.ok) {
-    throw new Error(`DeepSeek API error: ${response.status} ${await response.text()}`);
-  }
-  
-  const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-  const script = data?.choices?.[0]?.message?.content;
-
-  // Allow shorter scripts for titles (sometimes titles are short)
-  if (!script || script.trim().length < 5) {
-    console.warn('DeepSeek returned a very short script/title:', script);
-    // If it's completely empty, throw error, otherwise return it (it might be just a short title)
-    if (!script || script.trim().length === 0) {
-        throw new Error('DeepSeek returned an empty video script.');
-    }
-  }
-
-  return script;
 }
 
 export async function translateTextWithDeepSeek(text: string): Promise<string> {

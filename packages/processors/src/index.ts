@@ -134,8 +134,9 @@ export async function buildHtmlReport({
   // 将 Markdown 格式的摘要转换为 HTML（简单实现）
   const markdownToHtml = (text: string): string => {
     return text
+      .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; border-radius: 8px; margin: 12px 0; display: block;" />') // 图片
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // 粗体
-      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" style="color: #0ea5e9; text-decoration: none;">$1</a>') // 链接
+      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #0ea5e9; text-decoration: none;">$1</a>') // 链接
       .replace(/\n\n/g, '</p><p style="color: #cbd5e1; line-height: 1.8; margin: 12px 0;">') // 段落
       .replace(/\n/g, '<br>'); // 换行
   };
@@ -168,6 +169,7 @@ export async function buildHtmlReport({
     <meta charset="UTF-8" />
     <title>AI 日报 - ${formattedDate}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
     <style>
       * { box-sizing: border-box; }
       body { 
